@@ -1,0 +1,187 @@
+#!/usr/bin/ruby
+#
+# Back up this system to a byteback-enabled server (just some command line
+# tools and SSH setup).  We aim to make sure this backups are easy, complete 
+# and safe for most types of hosting customer.
+#
+# See 'man byteback' for more information.
+
+require 'trollop'
+require 'resolv'
+
+HOSTNAME = `hostname -f`
+
+@sources = ["/"]
+@exclude = ["/swap.file", "/var/backups/localhost"]
+
+def error(message)
+	STDERR.print "*** #{message}\n"
+	exit 1
+end
+
+def verbose(message)
+	print "#{message}\n"
+end
+
+opts = Trollop::options do
+
+	opt :destination, "Backup destination (i.e. user@host:/path)", 
+	  :type => :string
+
+	opt :source, "Source paths",
+	  :type => :strings
+
+	opt :verbose, "Show rsync command and progress"
+
+	opt :retry_number, "Number of retries on error",
+	  :type => :integer,
+	  :default => 3
+
+	opt :retry_delay, "Wait number of seconds between retries",
+	  :type => :integer,
+	  :default => 1800
+
+	opt :ssh_key, "SSH key for connection",
+	  :type => :string,
+	  :default => "/etc/byteback/key"
+end
+
+@ssh_key = opts[:ssh_key]
+@verbose = opts[:verbose] ? "--verbose" : nil
+@sources = opts[:source] if opts[:source]
+@destination = opts[:destination]
+@retry_number = opts[:retry_number]
+@retry_delay = opts[:retry_delay]
+
+if !@destination && File.exists?("/etc/byteback/destination")
+	@destination = File.read("/etc/byteback/destination").chomp
+end
+error("Must suply --destination or put it into /etc/bytebackup/destination") unless @destination
+
+_dummy, @destination_user, @destination_host, colon, @destination_path = 
+  /^(.*)?(?:@)([^:]+)(:)(.*)?$/.match(@destination).to_a
+
+error("Must be a remote path") unless colon
+
+# Validate & normalise source directories
+#
+error("No sources specified") if @sources.empty?
+@sources = @sources.map do |s|
+	s = s.gsub(/\/+/,"/")
+	error("Can't read directory #{s}") unless File.readable?(s)
+	s
+end
+
+# Guess destination for backup
+#
+if !@destination
+	guesses = []
+	Resolv::DNS.open do |dns|
+		suffix = HOSTNAME.split(".")[2..-1].join(".")
+		["byteback." + suffix].each do |name|
+			[Resolv::DNS::Resource::IN::AAAA,
+			 Resolv::DNS::Resource::IN::A].each do |record_type|
+			 	next if !guesses.empty? # only care about first result
+				guesses += dns.getresources(name, record_type)
+			end
+		end
+	end
+
+	if guesses.empty?
+		error "Couldn't guess at backup host, please specify --destination"
+	end
+
+	# ick, do I really have to do this to get a string represnetation of
+	# the IP address?
+	#
+	guess = guesses.first.inspect
+	match = / (.*)>$/.match(guess)[1]
+	error "Result #{guesses} is not an IP" if !match
+	@destination = "byteback@#{match[1]}:#{HOSTNAME}/current/"
+
+	verbose "Guessed destination=#{@destination} from #{guess}"
+end
+
+# Test ssh connection is good before we start
+#
+error("Could not read ssh key #{@ssh_key}") unless File.readable?(@ssh_key)
+
+error("Could not connect to #{@destination}") unless system(
+	"ssh",
+	"-a",
+	"-i",
+	@ssh_key,
+	@destination.split(":")[0],
+	"byteback-receive",
+	"--ping",
+	"#{@verbose}"
+)
+
+# Call rsync to copy certain sources, returns exit status (see man rsync)
+#
+def rsync(*sources)
+	# Default options include --inplace because we only care about consistency
+	# at the end of the job, and rsync will do more work for big files without
+	# it.
+	#
+	args = [
+		"rsync",
+		"--archive",
+  		"--numeric-ids",
+  		"--delete",
+  		"--inplace",
+  		"--rsync-path",
+    		"rsync --fake-super",
+  		"--rsh",
+    		"ssh -a -i #{@ssh_key} -l #{@destination_user}",
+  		"--delete",
+  		"--one-file-system",
+  		"--relative"
+  	]
+
+  	args << "--verbose" if @verbose
+	args += @exclude.map { |x| ["--exclude", x] }.flatten
+	args += sources
+  	args << @destination
+
+	print args.map { |a| / /.match(a) ? "\"#{a}\"" : a }.join(" ")+"\n" if @verbose
+  	system(*args)
+
+  	return $?.exitstatus
+end
+
+RSYNC_EXIT_STATUSES_TO_RETRY_ON = [10,11,20,21,22,23,24,30]
+
+# Run the file copy, retrying if necessary
+# 
+loop do
+	status = rsync(*@sources)
+
+	if status === 0
+		break
+	elsif RSYNC_EXIT_STATUSES_TO_RETRY_ON.include?(status)
+		if @retry_number > 0
+			@retry_number -= 1
+			sleep @retry_delay
+			redo
+		else
+			error("Maximum number of rsync retries reached")
+		end
+	else
+		error("Fatal rsync error occurred (#{status})")
+	end
+end
+
+# Mark the backup as done on the other end
+#
+error("Backup could not be marked complete") unless system(
+	"ssh",
+	"-a",
+	"-i",
+	@ssh_key,
+	@destination.split(":")[0],
+	"sudo",
+	"byteback-snapshot",
+	"--snapshot",
+	"#{@verbose}"
+)

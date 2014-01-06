@@ -1,0 +1,65 @@
+#!/usr/bin/ruby
+#
+# byteback backup script prototype
+#
+# (c) Bytemark Hosting 2013
+#
+# 
+VERSION='prototype'
+
+HOSTNAME=`hostname -f`
+
+mode = ARGV.shift
+case mode
+when 'backup'
+
+    @destination_host = HOSTNAME.split(".")[2..-1].join(".")
+
+	system *<<-CMD.split(/\s+/)
+
+rsync 
+
+  --rsync-path 
+    rsync --fake-super
+  --rsh 
+    ssh -i /etc/bytebackup/bytebackup.key
+  --delete
+  --one-file-system
+  --archive
+  --exclude
+    /swap.file
+
+  /
+
+  #{@destination_ssh}
+
+	CMD
+when 'backup-receive'
+
+else
+	print <<-SYNTAX
+byteback v#{VERSION}, a focused backup tool
+
+Usage: byteback <mode>
+
+Modes:
+    server-setup
+    client-setup
+    backup
+    backup-receive
+
+Type 'bytebackup help <mode>' for more information on a mode, or
+see the man page.
+	SYNTAX
+	exit 1
+end
+
+require 'trollop'
+opts = Trollop::options do
+	opt :mode, "Program mode to run", 
+		:default => :backup,
+		:required,
+		:type => String
+
+	opt 
+:end

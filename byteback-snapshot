@@ -1,0 +1,216 @@
+#!/usr/bin/ruby
+#
+# Program to create a snapshot and/or rotate a directory of backup snapshots 
+# using btrfs subvolume commands.
+
+require 'trollop'
+require 'time'
+
+def error(message)
+	STDERR.print "*** #{message}\n"
+	exit 1
+end
+
+def verbose(message)
+	print "#{Time.now}: #{message}\n" if @verbose
+end
+
+# Icky way to find out free disc space on our mount
+#
+class DiskFree
+	def initialize(mount)
+		@mount = mount
+	end
+
+	def total
+		all[2]
+	end
+
+	def used
+		all[3]
+	end
+
+	def available
+		all[4]
+	end
+
+	def fraction_used
+		disk_device, disk_fs, disk_total, disk_used, disk_available, *rest = all
+		disk_used.to_f / disk_available
+	end
+
+	protected
+
+	def all
+		disk_device, disk_fs, disk_total, disk_used, disk_available, *rest = 
+			df.
+			split("\n")[1].
+			split(/\s+/).
+			map { |i| /^[0-9]+$/.match(i) ? i.to_i : i }
+	end
+
+	def df
+		`/bin/df -T -P -B1 #{@mount}`
+	end
+end
+
+# Represent a directory full of backups where "current"  is a subvolume
+# which is snapshotted to frozen backup directories called e.g. 
+# "yyyy-mm-ddThh:mm".
+#
+class BackupDirectory
+	attr_reader :dir
+
+	def initialize(dir)
+		@dir = Dir.new(dir)
+		current
+	end
+
+	# Return total amount of free space in backup directory (bytes)
+	#
+	def free
+		df = DiskFree.new(@dir.path)
+		df.total - df.used
+	end
+
+	# Return an array of Times representing the current list of 
+	# snapshots.
+	#
+	def snapshot_times
+		@dir.entries.map do |entry|
+			begin
+				Time.parse(entry)
+			rescue ArgumentError => error
+				nil
+			end
+		end.
+		compact.
+		sort
+	end
+
+	# What order to remove snapshots in to regain disk space?
+	#
+	# Order backups by their closeness to defined backup times, which are
+	# listed in a set order (i.e. today's backup is more important than yesterday's).
+	#
+	BACKUP_IMPORTANCE = [0, 1, 2, 3, 7, 14, 21, 28, 56, 112]
+	def snapshot_times_by_importance
+		now = Time.now
+		snapshot_times_unsorted = snapshot_times
+		snapshot_times_sorted = []
+		while !snapshot_times_unsorted.empty?
+			BACKUP_IMPORTANCE.each do |days|
+				target_time = now + (days*86400)
+				closest = snapshot_times_unsorted.inject(nil) do |best, time|
+					if best.nil? || (time-target_time).abs < (best-target_time).abs
+						time
+					else
+						best
+					end
+				end
+				break unless closest
+				snapshot_times_sorted << snapshot_times_unsorted.delete(closest)
+			end
+		end
+		snapshot_times_sorted
+	end
+
+	# Returns the size of the last completed snapshot (runs du, maybe slow)
+	#
+	# Would much prefer to take advantage of this feature:
+	#   http://dustymabe.com/2013/09/22/btrfs-how-big-are-my-snapshots/
+	# but it's not currently in Debian/wheezy.
+	#
+	def latest_snapshot_size
+		`du -s -b #{snapshot_path(snapshot_times.last)}`.to_i
+	end
+
+	# Create a new snapshot of 'current'
+	#
+	def new_snapshot!
+		system_no_error("btrfs subvolume snapshot -r #{current.path} #{snapshot_path}")
+	end
+
+	def delete_snapshot!(time)
+		system_no_error("btrfs subvolume delete #{snapshot_path(time)}")
+	end
+
+	def current
+		Dir.new("#{dir.path}/current")
+	end
+
+	def snapshot_path(time=Time.now)
+		"#{dir.path}/#{time.strftime("%Y-%m-%dT%H:%M")}"
+	end
+
+	protected
+
+	def system_no_error(*args)
+		raise RuntimeError.new("Command failed: "+args.join(" ")) unless
+		  system(*args)
+	end
+end
+
+opts = Trollop::options do
+
+    opt :root, "Backups directory (must be a btrfs subvolume)",
+    	:type => :string
+
+    opt :snapshot, "Take a new snapshot"
+
+    opt :prune, "Prune old backups"
+
+    opt :list, "List backups (by 'age' or 'importance')",
+    	:type => :string
+
+    opt :verbose, "Print diagnostics"
+
+end
+
+@root = opts[:root]
+@verbose = opts[:verbose]
+@do_snapshot = opts[:snapshot]
+@do_list = opts[:list]
+@do_prune = opts[:prune]
+
+error("Must specify snapshot, prune or list") unless @do_snapshot || @do_prune || @do_list
+
+error("--root not readable") unless File.directory?(@root)
+
+@backups = BackupDirectory.new(@root)
+
+
+if @do_snapshot
+	verbose "Making new snapshot"
+	@backups.new_snapshot! 
+end
+
+if @do_list
+	list = @do_list == 'age' ? 
+		@backups.snapshot_times : # oldest first
+		@backups.snapshot_times_by_importance.reverse # least important first
+	print "Backups in #{@root} by #{@do_list}:\n"
+	list.each_with_index do |time, index|
+		print "#{sprintf('% 3d',index)}: #{time}\n"
+	end
+end
+
+if @do_prune
+	target_free_space = @backups.latest_snapshot_size
+	verbose "Want to ensure we have #{target_free_space}"
+
+	if @backups.free >= target_free_space
+		verbose "(we have #{@backups.free} so no action needed)"
+	else
+		snapshot_times_by_importance = @backups.snapshot_times_by_importance
+
+		while @backups.free < target_free_space && !snapshot_times_by_importance.empty?
+			to_delete = snapshot_times_by_importance.pop
+			verbose "Deleting #{to_delete}"
+			@backups.delete_snapshot!(to_delete)
+			verbose "Leaves us with #{@backups.free}"
+		end
+	end
+end
+
+verbose "Finished"
