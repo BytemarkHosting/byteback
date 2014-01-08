@@ -9,8 +9,6 @@
 require 'trollop'
 require 'resolv'
 
-HOSTNAME = `hostname -f`
-
 @sources = ["/"]
 @exclude = ["/swap.file", "/var/backups/localhost"]
 
@@ -76,8 +74,9 @@ end
 #
 if !@destination
 	guesses = []
+	hostname = `hostname -f`
 	Resolv::DNS.open do |dns|
-		suffix = HOSTNAME.split(".")[2..-1].join(".")
+		suffix = hostname.split(".")[2..-1].join(".")
 		["byteback." + suffix].each do |name|
 			[Resolv::DNS::Resource::IN::AAAA,
 			 Resolv::DNS::Resource::IN::A].each do |record_type|
@@ -91,7 +90,7 @@ if !@destination
 		error "Couldn't guess at backup host, please specify --destination"
 	end
 
-	# ick, do I really have to do this to get a string represnetation of
+	# ick, do I really have to do this to get a string represnetion of
 	# the IP address?
 	#
 	guess = guesses.first.inspect
@@ -106,16 +105,18 @@ end
 #
 error("Could not read ssh key #{@ssh_key}") unless File.readable?(@ssh_key)
 
-error("Could not connect to #{@destination}") unless system(
-	"ssh",
-	"-a",
-	"-i",
-	@ssh_key,
-	@destination.split(":")[0],
-	"byteback-receive",
-	"--ping",
-	"#{@verbose}"
-)
+def ssh(*args)
+	["ssh", 
+		"-o", "BatchMode=yes", 
+		"-x", "-a", 
+		"-i", @ssh_key, 
+		"-l", @destination_user
+	] + 
+	args
+end
+
+error("Could not connect to #{@destination}") unless 
+	system(*ssh("byteback-receive", "--ping", @verbose))
 
 # Call rsync to copy certain sources, returns exit status (see man rsync)
 #
@@ -133,7 +134,7 @@ def rsync(*sources)
   		"--rsync-path",
     		"rsync --fake-super",
   		"--rsh",
-    		"ssh -a -i #{@ssh_key} -l #{@destination_user}",
+  			ssh.join(" "),
   		"--delete",
   		"--one-file-system",
   		"--relative"
@@ -174,14 +175,5 @@ end
 
 # Mark the backup as done on the other end
 #
-error("Backup could not be marked complete") unless system(
-	"ssh",
-	"-a",
-	"-i",
-	@ssh_key,
-	@destination.split(":")[0],
-	"sudo",
-	"byteback-snapshot",
-	"--snapshot",
-	"#{@verbose}"
-)
+error("Backup could not be marked complete") unless 
+	system(*ssh("sudo", "byteback-snapshot", "--snapshot", @verbose))
