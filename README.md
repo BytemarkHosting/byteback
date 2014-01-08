@@ -5,10 +5,9 @@ byteback encapsulates Bytemark's "best practice" for maintenance-free backups
 with easy client and server setup.
 
 "Maintenance-free" means that we'd rather make full use of a fixed amount of
-disc space with simple & predictable rules.  Management of disc space must be
-completely automatic, so the process never grinds to a halt for reasons that
-could be automatically resolved.  Failed backups can be restarted in case of
-network problems.
+disc space.  Management of disc space must be completely automatic, so the
+process never grinds to a halt for reasons that could be automatically 
+resolved.  Failed backups can be restarted in case of network problems.
 
 We use the standard OpenSSH on the server for encrypted transport & access 
 control, btrfs for simple snapshots and rsync for efficient data transfer
@@ -23,9 +22,13 @@ Install the 'byteback' package on the server, along with its dependencies
 (rsync, sudo).
 
 You then need to perform the following local setup on the server, which can
-securely handle backups for multiple clients.  The following commands are
-appropriate for a Debian system, you might need to alter it for other Linux
-distributions:
+securely handle backups for multiple clients.  You need a dedicated user
+(which is usually called 'byteback') with a home directory on a btrfs 
+filesystem, and some privileges to run commands through sudo.
+
+The following commands are appropriate for a Debian system, you might need 
+to alter it for other Linux distributions, or if you are not using LVM
+for your discs:
 
 	# Create a dedicated UNIX user which will store everyone's backups, and
 	# allow logins
@@ -64,14 +67,14 @@ client to start and watch the backup.
 
 Configuring byteback-backup
 ---------------------------
-You can now set "byteback backup"  on a daily cron job to start backing up the
+You can now set "byteback-backup"  on a daily cron job to start backing up the
 server on a regular basis.
 
 Without any further options this will copy every file from the root downwards,
 excluding kernel-based virtual filesystems (/proc, /sys etc.) network 
 filesystems (NFS, SMB) and tmpfs or loopback mounts.
 
-It currently excludes /swap.file and /var/backups/localhost which (on Bytemark
+It currently excludes /swap.filkeye and /var/backups/localhost which (on Bytemark
 systems) do not need to be part of any backup.
 
 When the backup has completed successfully, the server will take a snapshot
@@ -83,8 +86,54 @@ will cause the backup to be resumed, with rsync saving the work of re-copying
 any files that hadn't changed.  By default this will happen automatically up to 
 5 times, with a 10 minute pause in between each attempt.
 
+The trust model
+---------------
+Backups are intended to keep your data safe, and byteback makes the assumption
+that the client may become hostile to the backup server.  At Bytemark this
+allows us to guard against rogue employees of our clients destroying the backup,
+while ensuring that our clients can still access all their old backups.  There
+are several measures to guard against this, though they are all ineffective
+over a long enough period of time:
+
+* the server uses SSH's command feature to ensure that clients can only
+  run rsync to the appropriate directory;
+
+* the server's snapshots are read-only, so the client can't just rsync an
+  empty directory over an old backup;
+
+* the server will refuse to take snapshots "too often" to stop the client
+  from filling the disc with useless data;
+
+* the server will refuse to prune away space for a new backup that is
+  suddenly larger than previous ones.
+
 Pruning behaviour
 -----------------
+Unless you are backing up a very small amount of data, backups will always 
+need pruning, i.e. old backups must be deleted to make way for newer ones.
+
+There is a program on the server called bytebackup-prune which deals with this
+operation.  It deletes old backups until a certain amount of free space is
+achieved, which is currently determined to be the average size of the last 
+10 backups, plus 50%.
+
+It can choose which backups to delete by one of two methods:
+
+1) the 'age' method simply deletes the oldest backup;
+
+2) the 'importance' method tries to retain a more spread-out backup pattern
+by "scoring" each backup according to how close it is to a set of "target 
+times".  These are 0, 1, 2, 3, 7, 14, 21, 28, 56, and 112 days.  So when you
+ask the pruner to run, the backup closest to the present time will be the 
+last one to be deleted.  The backup closes to "1 day ago" will be the second-last,
+and so on.  We score every backup in this way until we end up with a "least
+important" snapshot to delete.
+
+The upshot of the second strategy should be that we retain closely-spaced
+daily backups, but as they get too numerous, we make sure that we are reluctant
+to delete our very oldest.
+
+[TODO: model it]
 
 Features to come
 ----------------
