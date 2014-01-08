@@ -162,7 +162,7 @@ opts = Trollop::options do
 
     opt :snapshot, "Take a new snapshot"
 
-    opt :prune, "Prune old backups"
+    opt :prune, "Prune old backups",
     	:type => :string
 
     opt :list, "List backups (by 'age' or 'importance')",
@@ -195,10 +195,10 @@ def get_snapshots_by(method)
 end
 
 if @do_snapshot
-	last_snapshot_time = @backups.snapshots.last
+	last_snapshot_time = @backups.snapshot_times.last
 	error("Last snapshot was less than six hours ago") unless 
 		!last_snapshot_time || 
-		Time.now - @backups.snapshots.last >= 6*60*60 # FIXME: make configurable
+		Time.now - @backups.snapshot_times.last >= 6*60*60 # FIXME: make configurable
 
 	verbose "Making new snapshot"
 	@backups.new_snapshot! 

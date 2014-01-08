@@ -3,6 +3,8 @@
 # Program to receive backups and run rsync in receive mode.  Must check that
 # user as authorised by SSH is allowed to access particular directory.
 
+#STDERR.print ARGV.inspect + "\n"
+
 require 'trollop'
 
 def error(message)
@@ -16,7 +18,7 @@ if ENV['SSH_ORIGINAL_COMMAND']
 	ARGV.concat(ENV['SSH_ORIGINAL_COMMAND'].split(" "))
 end
 
-#STDERR.print "after ARGV=#{ARGV.inspect}"
+#STDERR.print "after ARGV=#{ARGV.inspect}\n"
 
 byteback_host = ENV['BYTEBACK_HOST']
 error("BYTEBACK_HOST environment not set") unless byteback_host

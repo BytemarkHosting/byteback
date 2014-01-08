@@ -110,9 +110,11 @@ def ssh(*args)
 		"-o", "BatchMode=yes", 
 		"-x", "-a", 
 		"-i", @ssh_key, 
-		"-l", @destination_user
+		"-l", @destination_user,
+		@destination_host
 	] + 
-	args
+	args.
+	map { |a| a ? a : "" }
 end
 
 error("Could not connect to #{@destination}") unless 
@@ -134,7 +136,7 @@ def rsync(*sources)
   		"--rsync-path",
     		"rsync --fake-super",
   		"--rsh",
-  			ssh.join(" "),
+  			ssh[0..-2].join(" "),
   		"--delete",
   		"--one-file-system",
   		"--relative"
@@ -146,6 +148,7 @@ def rsync(*sources)
   	args << @destination
 
 	print args.map { |a| / /.match(a) ? "\"#{a}\"" : a }.join(" ")+"\n" if @verbose
+
   	system(*args)
 
   	return $?.exitstatus
