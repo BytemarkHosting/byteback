@@ -51,6 +51,12 @@ for your discs:
 	echo '/dev/my_volume_group/byteback /byteback btrfs compress 0 0' >>/etc/fstab
 	mount /byteback
 
+Finally, before setting up the client, add 
+
+  PermitUserEnvironment yes
+
+to /etc/ssh/sshd_config, and restart sshd.
+
 Setting up: client
 ------------------
 Clients are machines that need to be backed up.  Assuming you can log into
@@ -71,11 +77,15 @@ You can now set "byteback-backup"  on a daily cron job to start backing up the
 server on a regular basis.
 
 Without any further options this will copy every file from the root downwards,
-excluding kernel-based virtual filesystems (/proc, /sys etc.) network 
-filesystems (NFS, SMB) and tmpfs or loopback mounts.
+excluding anything not on the same filesystem, i.e. kernel-based virtual
+filesystems (/proc, /sys etc.) network filesystems (NFS, SMB) and tmpfs or
+loopback mounts.  To specify which filesystems to backup, add them to
+/etc/byteback/sources, one per line.
 
-It currently excludes /swap.filkeye and /var/backups/localhost which (on Bytemark
-systems) do not need to be part of any backup.
+It currently excludes /var/cache/apt/archives, /swap.file and
+/var/backups/localhost which (on Bytemark systems) do not need to be part of
+any backup.  To specify which locations are excluded, add them to
+/etc/byteback/excludes, one per line.
 
 When the backup has completed successfully, the server will take a snapshot
 so that the client can't alter the backups, and then "prune" the backup 
@@ -85,6 +95,25 @@ If the backup is interrupted or dies unexpected, running "byteback backup"
 will cause the backup to be resumed, with rsync saving the work of re-copying
 any files that hadn't changed.  By default this will happen automatically up to 
 5 times, with a 10 minute pause in between each attempt.
+
+Viewing and restoring backups
+-----------------------------
+
+Backups can be viewed on the server filesystem, although the permissions will
+be wrong.  The rsync "fake-super" flag is used to store the permissions in a
+user attribute list.  To view this list on the server, run 
+
+  getfaddr -d  $filename
+
+This command is part of the "attr" package in Debian.
+
+To restore a file to the current directory, you need to run:
+
+  rsync -Prat --rsync-path='rsync --fake-super' byteback@mybackuphost.net:path/to/file .
+
+The --fake-super flag only applies to the "local" end, hence the need to specfy
+the rsync-path.  You'll need to set up correct SSH permissions at the remote
+end for this to work.
 
 The trust model
 ---------------
@@ -112,7 +141,7 @@ Pruning behaviour
 Unless you are backing up a very small amount of data, backups will always 
 need pruning, i.e. old backups must be deleted to make way for newer ones.
 
-There is a program on the server called bytebackup-prune which deals with this
+There is a program on the server called byteback-prune which deals with this
 operation.  It deletes old backups until a certain amount of free space is
 achieved, which is currently determined to be the average size of the last 
 10 backups, plus 50%.
@@ -141,4 +170,6 @@ Features to come
   of a MySQL data directory (using FLUSH TABLES WITH READ LOCK)
 
 * (same for postgres using pg_start_backup() and pg_stop_backup())
+
+* byteback-restore for easy restoration.
 
