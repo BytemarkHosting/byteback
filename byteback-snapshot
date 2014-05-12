@@ -56,7 +56,7 @@ end
 
 # Represent a directory full of backups where "current"  is a subvolume
 # which is snapshotted to frozen backup directories called e.g. 
-# "yyyy-mm-ddThh:mm".
+# "yyyy-mm-ddThh:mm+zzzz".
 #
 class BackupDirectory
 	attr_reader :dir
@@ -144,7 +144,7 @@ class BackupDirectory
 	end
 
 	def snapshot_path(time=Time.now)
-		"#{dir.path}/#{time.strftime("%Y-%m-%dT%H:%M")}"
+		"#{dir.path}/#{time.strftime("%Y-%m-%dT%H:%M%z")}"
 	end
 
 	protected
