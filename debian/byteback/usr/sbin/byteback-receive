@@ -1,0 +1,54 @@
+#!/usr/bin/ruby
+#
+# Program to receive backups and run rsync in receive mode.  Must check that
+# user as authorised by SSH is allowed to access particular directory.
+
+#STDERR.print ARGV.inspect + "\n"
+
+require 'trollop'
+
+def error(message)
+	STDERR.print "*** #{message}\n"
+	exit 1
+end
+
+#STDERR.print "ARGV=#{ARGV.inspect}\nSSH_ORIGINAL_COMMAND=#{ENV['SSH_ORIGINAL_COMMAND']}\n"
+
+if ENV['SSH_ORIGINAL_COMMAND']
+	ARGV.concat(ENV['SSH_ORIGINAL_COMMAND'].split(" "))
+end
+
+#STDERR.print "after ARGV=#{ARGV.inspect}\n"
+
+byteback_host = ENV['BYTEBACK_HOST']
+error("BYTEBACK_HOST environment not set") unless byteback_host
+
+byteback_root = ENV['HOME'] + "/" + ENV["BYTEBACK_HOST"]
+error("#{byteback_root} does not exist") unless File.directory?(byteback_root)
+
+# force destination to be where we expect
+#
+if ARGV[0] == 'rsync'
+	ARGV[-1] = "#{byteback_root}/current"
+	exec(*ARGV)
+elsif ARGV[0] == 'byteback-snapshot' || (ARGV[0] == 'sudo' && ARGV[1] == 'byteback-snapshot')
+	ARGV.concat(["--root", "#{byteback_root}"])
+	exec(*ARGV)
+end
+
+opts = Trollop::options do
+	opt :verbose, "Print diagnostics"
+	opt :ping, "Check connection parameters and exit"
+	opt :complete, "Mark current backup as complete"
+end
+
+error("Please only choose one mode") if opts[:ping] && opts[:complete]
+if opts[:complete]
+	system("byteback-snapshot", byteback_root)
+elsif opts[:ping]
+	exit 0
+else
+	STDERR.print "byteback-receive failed\n"
+	exit 9
+end
+

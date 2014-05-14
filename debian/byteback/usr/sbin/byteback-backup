@@ -1,0 +1,216 @@
+#!/usr/bin/ruby
+#
+# Back up this system to a byteback-enabled server (just some command line
+# tools and SSH setup).  We aim to make sure this backups are easy, complete
+# and safe for most types of hosting customer.
+#
+# See 'man byteback' for more information.
+
+require 'getoptlong'
+require 'resolv'
+
+
+def error(message)
+  STDERR.print "*** #{message}\n"
+  exit 1
+end
+
+def verbose(message)
+  print "#{message}\n"
+end
+
+def help
+  puts <<EOF
+#{$0}: Back up this system to a byteback-enabled server
+
+Options:
+   --destination, -d <s>:   Backup destination (i.e. user@host:/path)
+       --source, -s  <s>:   Source paths (defaults: / and /boot)
+       --exclude, -x <s>:   Exclude paths (defaults: /swap.file, /var/backups/localhost, /var/cache)
+           --verbose, -v:   Show rsync command and progress
+  --retry-number, -r <n>:   Number of retries on error (default: 3)
+   --retry-delay, -e <n>:   Wait number of seconds between retries (default: 1800)
+       --ssh-key, -k <s>:   SSH key for connection (default: /etc/byteback/key)
+              --help, -h:   Show this message
+EOF
+  exit 0
+end
+
+
+opts = GetoptLong.new(
+  [ '--help',       '-h', GetoptLong::NO_ARGUMENT ],
+  [ '--verbose',    '-v', GetoptLong::NO_ARGUMENT ],
+  [ '--source',     '-s', GetoptLong::REQUIRED_ARGUMENT ],
+  [ '--destination',   '-d', GetoptLong::REQUIRED_ARGUMENT ],
+  [ '--retry-number',  '-r', GetoptLong::REQUIRED_ARGUMENT ],
+  [ '--retry-delay',   '-e', GetoptLong::REQUIRED_ARGUMENT ],
+  [ '--ssh-key'       ,'-k', GetoptLong::REQUIRED_ARGUMENT ]
+)
+
+@ssh_key = nil
+@destination = nil
+@retry_number = 3
+@retry_delay = 1800
+@sources = nil
+@excludes = nil
+
+# Read the default destination
+if File.exists?("/etc/byteback/destination")
+  @destination = File.read("/etc/byteback/destination").chomp
+end
+
+# Set the default SSH key
+if File.exists?("/etc/byteback/key")
+  @ssh_key = "/etc/byteback/key"
+end
+
+# Read in the default sources
+if File.exists?("/etc/byteback/sources")
+  @sources = File.readlines("/etc/byteback/sources").map{|m| m.chomp}
+end
+
+# Read in the default excludes
+if File.exists?("/etc/byteback/excludes")
+  @excludes = File.readlines("/etc/byteback/excludes").map{|m| m.chomp}
+end
+
+begin
+  opts.each do |opt,arg|
+    case opt
+    when '--help'
+      help = true
+    when '--verbose'
+      $VERBOSE = true
+    when "--source"
+      @sources ||= []
+      @sources << arg
+    when "--exclude"
+      @excludes ||= []
+      @excludes << arg
+    when "--destination"
+      @destination = arg
+    when "--retry-number"
+      @retry_number = arg.to_i
+    when "--retry-delay"
+      @retry_delay = arg.to_i
+    when "--ssh-key"
+      @ssh_key = arg
+    end
+  end
+rescue => err
+  # any errors, show the help
+  warn err.to_s
+  help = true
+end
+
+
+#
+# Check our destination
+#
+if @destination =~ /^(?:(.+)@)?([^@:]+):(.+)?$/
+  @destination_user, @destination_host, @destination_path = [$1, $2, $3]
+else
+  error("Destination must be a remote path, e.g. ssh@host.com:/store/backups")
+end
+
+#
+# Validate & normalise source directories
+#
+@sources = ["/"] if @sources.nil?
+
+error("No sources specified") if @sources.empty?
+
+@sources = @sources.map do |s|
+  s = s.gsub(/\/+/,"/")
+  error("Can't read directory #{s}") unless File.readable?(s)
+  s
+end
+
+#
+# Validate and normalise excludes
+#
+if @excludes.nil?
+  @excludes = ["/swap.file", "/var/backups/localhost"]
+  @excludes << "/var/cache/apt/archives" if  File.directory?("/var/cache/apt/archives")
+end
+
+@excludes = @excludes.map do |e|
+  e.gsub(/\/+/,"/")
+end
+
+error("Must suply --destination or put it into /etc/bytebackup/destination") unless @destination
+
+#
+# Test ssh connection is good before we start
+#
+error("Could not read ssh key #{@ssh_key}") unless File.readable?(@ssh_key)
+
+def ssh(*ssh_args)
+  args = ["ssh",
+    "-o", "BatchMode=yes",
+    "-x", "-a",
+    "-i", @ssh_key,
+    "-l", @destination_user,
+    @destination_host
+  ] +
+  ssh_args.
+  map { |a| a ? a : "" }
+
+  print args.map { |a| / /.match(a) ? "\"#{a}\"" : a }.join(" ")+"\n" if $VERBOSE
+
+  system(*args)
+end
+
+error("Could not connect to #{@destination}") unless
+  ssh("byteback-receive", "--ping", ($VERBOSE ? "--verbose" : "" ))
+
+#
+# Call rsync to copy certain sources, returns exit status (see man rsync)
+#
+def rsync(*sources)
+  # Default options include --inplace because we only care about consistency
+  # at the end of the job, and rsync will do more work for big files without
+  # it.
+  #
+  args = %w(rsync --archive --numeric-ids --delete --inplace --delete --one-file-system --relative)
+  args += [ "--rsync-path", "rsync --fake-super"]
+  args += [ "--rsh", "ssh -o BatchMode=yes -x -a -i #{@ssh_key} -l #{@destination_user}"]
+  args << "--verbose" if $VERBOSE
+  args += @excludes.map { |x| ["--exclude", x] }.flatten
+  args += sources
+  args << @destination
+
+  print args.map { |a| / /.match(a) ? "\"#{a}\"" : a }.join(" ")+"\n" if $VERBOSE
+
+  system(*args)
+
+  return $?.exitstatus
+end
+
+RSYNC_EXIT_STATUSES_TO_RETRY_ON = [10,11,20,21,22,23,24,30]
+
+# Run the file copy, retrying if necessary
+#
+loop do
+  status = rsync(*@sources)
+
+  if status === 0
+    break
+  elsif RSYNC_EXIT_STATUSES_TO_RETRY_ON.include?(status)
+    if @retry_number > 0
+      @retry_number -= 1
+      sleep @retry_delay
+      redo
+    else
+      error("Maximum number of rsync retries reached")
+    end
+  else
+    error("Fatal rsync error occurred (#{status})")
+  end
+end
+
+# Mark the backup as done on the other end
+#
+error("Backup could not be marked complete") unless
+  ssh("sudo", "byteback-snapshot", "--snapshot", ($VERBOSE ? "--verbose" : ""))
+

@@ -1,0 +1,6 @@
+byteback /usr/sbin
+byteback-backup /usr/sbin
+byteback-receive /usr/sbin
+byteback-setup-client /usr/sbin
+byteback-setup-client-receive /usr/sbin
+byteback-snapshot /usr/sbin

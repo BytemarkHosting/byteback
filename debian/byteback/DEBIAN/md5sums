@@ -1,0 +1,9 @@
+6f600d576b18b93e3bf43afd043f156e  usr/sbin/byteback
+21a8bb0fb9fecf44bbf58e9bbceda2b7  usr/sbin/byteback-backup
+cee04f5b5f344d8ecb6ae0af488c5e0d  usr/sbin/byteback-receive
+7a7899e4bc3c0ba13280b8cd6eca827c  usr/sbin/byteback-setup-client
+cc78a3fd9b662e3db1e7fa801c4011dd  usr/sbin/byteback-setup-client-receive
+54a8cd3305209c36446b63707e68d070  usr/sbin/byteback-snapshot
+538e288de3c0b5fdddcfb65840017482  usr/share/doc/byteback/README.md.gz
+09620c298fa07a984827d0bac4dd9cc3  usr/share/doc/byteback/changelog.Debian.gz
+4e261bda29e8364ad551d709a97162a0  usr/share/doc/byteback/copyright

@@ -1,0 +1,11 @@
+byteback (0.2.0-1) stable; urgency=medium
+
+  * Client no loger require trollop
+
+ -- Patrick J Cherry <patrick@bytemark.co.uk>  Wed, 14 May 2014 13:54:38 +0100
+
+byteback (0.1.0-1) stable; urgency=medium
+
+  * Initial release
+
+ -- Patrick J Cherry <patrick@bytemark.co.uk>  Thu, 24 Apr 2014 12:29:26 +0100

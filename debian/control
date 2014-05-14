@@ -1,0 +1,31 @@
+Source: byteback
+Section: ruby
+Priority: optional
+Maintainer: Patrick J Cherry <patrick@bytemark.co.uk>
+Build-Depends: debhelper (>= 7.0.50~), gem2deb (>= 0.6.1~)
+Standards-Version: 3.9.4
+# Vcs-Git:
+Vcs-Browser: https://projects.bytemark.co.uk/projects/byteback/repository
+Homepage: https://projects.bytemark.co.uk/projects/byteback
+XS-Ruby-Versions: all
+
+Package: byteback
+Architecture: all
+XB-Ruby-Versions: ${ruby:Versions}
+Depends: ${shlibs:Depends}, ${misc:Depends}, ruby | ruby-interpreter, rsync, openssh-client
+Recommends:  ruby-trollop | libtrollop-ruby
+Description: Maintenance-free client & server backup scripts for Linux
+  byteback encapsulates Bytemark's "best practice" for maintenance-free backups
+  with easy client and server setup.
+  .
+  "Maintenance-free" means that we'd rather make full use of a fixed amount of
+  disc space.  Management of disc space must be completely automatic, so the
+  process never grinds to a halt for reasons that could be automatically
+  resolved.  Failed backups can be restarted in case of network problems.
+  .
+  We use the standard OpenSSH on the server for encrypted transport & access
+  control, btrfs for simple snapshots and rsync for efficient data transfer
+  across the network.
+  .
+  Backups should require as little configuration as possible to be safe - just
+  the server address should be enough.
