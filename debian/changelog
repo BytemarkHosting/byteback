@@ -1,3 +1,9 @@
+byteback (0.2.0-3) stable; urgency=medium
+
+  * Install scripts in to /usr/bin not /usr/sbin
+
+ -- Patrick J Cherry <patch@dynamo>  Wed, 14 May 2014 14:43:51 +0100
+
 byteback (0.2.0-2) stable; urgency=medium
 
   * Removed gem2deb and other ruby stuff from control
