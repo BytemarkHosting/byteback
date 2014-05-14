@@ -2,16 +2,14 @@ Source: byteback
 Section: ruby
 Priority: optional
 Maintainer: Patrick J Cherry <patrick@bytemark.co.uk>
-Build-Depends: debhelper (>= 7.0.50~), gem2deb (>= 0.6.1~)
+Build-Depends: debhelper (>= 7.0.50~)
 Standards-Version: 3.9.4
 # Vcs-Git:
 Vcs-Browser: https://projects.bytemark.co.uk/projects/byteback/repository
 Homepage: https://projects.bytemark.co.uk/projects/byteback
-XS-Ruby-Versions: all
 
 Package: byteback
 Architecture: all
-XB-Ruby-Versions: ${ruby:Versions}
 Depends: ${shlibs:Depends}, ${misc:Depends}, ruby | ruby-interpreter, rsync, openssh-client
 Recommends:  ruby-trollop | libtrollop-ruby
 Description: Maintenance-free client & server backup scripts for Linux

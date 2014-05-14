@@ -1,3 +1,9 @@
+byteback (0.2.0-2) stable; urgency=medium
+
+  * Removed gem2deb and other ruby stuff from control
+
+ -- Patrick J Cherry <patch@bytemark.co.uk>  Wed, 14 May 2014 14:29:50 +0100
+
 byteback (0.2.0-1) stable; urgency=medium
 
   * Client no loger require trollop
