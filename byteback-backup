@@ -9,6 +9,12 @@
 require 'getoptlong'
 require 'resolv'
 
+def remove_lockfile!
+  begin
+    File.unlink(@lockfile)
+  rescue Errno::ENOENT
+  end
+end
 
 def error(message)
   STDERR.print "*** #{message}\n"
@@ -33,6 +39,7 @@ Options:
        --ssh-key, -k <s>:   SSH key for connection (default: /etc/byteback/key)
               --help, -h:   Show this message
 EOF
+  remove_lockfile!
   exit 0
 end
 
@@ -53,6 +60,8 @@ opts = GetoptLong.new(
 @retry_delay = 1800
 @sources = nil
 @excludes = nil
+@lockfile = "/var/run/byteback/byteback.lock"
+
 
 # Read the default destination
 if File.exists?("/etc/byteback/destination")
@@ -103,6 +112,34 @@ rescue => err
   help = true
 end
 
+# Check the lockfile first
+if Dir.exists?(File.dirname(@lockfile))
+  if File.exists? @lockfile
+    # check the lockfile is sane
+    exist_pid = File.read(@lockfile).to_i
+    if exist_pid > 1 and exist_pid < (File.read("/proc/sys/kernel/pid_max").to_i)
+      begin 
+        Process.getpgid(exist_pid)
+        # if no exception, process is running, abort
+        error("Process is running (#{exist_pid} from #{@lockfile})! Exiting now.")
+      rescue Errno::ESRCH
+        # no process running with that pid, pidfile is stale
+        remove_lockfile!
+      end
+    else
+      # lockfile isn't sane, remove it and continue
+      remove_lockfile!
+    end
+  end
+else
+  Dir.mkdir(File.dirname(@lockfile))
+  # lockfile didn't exist so just carry on
+end
+
+# Own the pidfile ourselves
+File.open(@lockfile, "w") do |lockfile|
+  lockfile.puts Process::pid
+end
 
 #
 # Check our destination
@@ -214,3 +251,4 @@ end
 error("Backup could not be marked complete") unless
   ssh("sudo", "byteback-snapshot", "--snapshot", ($VERBOSE ? "--verbose" : ""))
 
+remove_lockfile!
