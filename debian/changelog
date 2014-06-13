@@ -1,3 +1,9 @@
+byteback (0.2.2-1) stable; urgency=medium
+
+  * Updated byteback not to use --one-filesystem flag.
+
+ -- Patrick J Cherry <patrick@bytemark.co.uk>  Fri, 13 Jun 2014 14:33:23 +0100
+
 byteback (0.2.1-1) stable; urgency=medium
 
   * Redirect command stdout to /dev/null unless the verbose flag is given.
