@@ -73,16 +73,6 @@ if File.exists?("/etc/byteback/key")
   @ssh_key = "/etc/byteback/key"
 end
 
-# Read in the default sources
-if File.exists?("/etc/byteback/sources")
-  @sources = File.readlines("/etc/byteback/sources").map{|m| m.chomp}
-end
-
-# Read in the default excludes
-if File.exists?("/etc/byteback/excludes")
-  @excludes = File.readlines("/etc/byteback/excludes").map{|m| m.chomp}
-end
-
 begin
   opts.each do |opt,arg|
     case opt
@@ -209,11 +199,26 @@ def rsync(*sources)
   # at the end of the job, and rsync will do more work for big files without
   # it.
   #
-  args = %w(rsync --archive --numeric-ids --delete --inplace --delete --one-file-system --relative)
+  args = %w(rsync --archive --numeric-ids --delete-delay --inplace --relative)
   args += [ "--rsync-path", "rsync --fake-super"]
   args += [ "--rsh", "ssh -o BatchMode=yes -x -a -i #{@ssh_key} -l #{@destination_user}"]
   args << "--verbose" if $VERBOSE
   args += @excludes.map { |x| ["--exclude", x] }.flatten
+
+  #
+  # Add in the rsync excludes and sources files, if present.
+  #
+  if File.exists?("/etc/byteback/excludes")
+      args += ["--exclude-from", "/etc/byteback/excludes"]
+  end
+
+  #
+  # Add in an rsync_filter if required.
+  #
+  if File.exists?("/etc/byteback/rsync_filter")
+      args += ["--filter", "merge /etc/byteback/rsync_filter"]
+  end
+
   args += sources
   args << @destination
 
