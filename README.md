@@ -76,16 +76,20 @@ Configuring byteback-backup
 You can now set "byteback-backup"  on a daily cron job to start backing up the
 server on a regular basis.
 
-Without any further options this will copy every file from the root downwards,
-excluding anything not on the same filesystem, i.e. kernel-based virtual
-filesystems (/proc, /sys etc.) network filesystems (NFS, SMB) and tmpfs or
-loopback mounts.  To specify which filesystems to backup, add them to
-/etc/byteback/sources, one per line.
+Without any further options this will copy every file from the root downwards.
 
-It currently excludes /var/cache/apt/archives, /swap.file and
+It currently excludes /tmp, /var/tmp, /var/cache/apt/archives, /swap.file and
 /var/backups/localhost which (on Bytemark systems) do not need to be part of
 any backup.  To specify which locations are excluded, add them to
-/etc/byteback/excludes, one per line.
+/etc/byteback/excludes, one per line.  The filesystems /dev, /proc, /run and
+/sys are always excluded.
+
+It is possible to configure a full rsync filter by creating the file
+/etc/byteback/rsync_filter, which is parsed to rsync via the --filter flag.
+Note that excludes on the command line take precedence, unless the filter
+starts with an exclamation mark, which resets everything.  If you do this,
+you'll need to specify /proc, /sys, etc manually.  See the rsync manpage for
+more information about filters.
 
 When the backup has completed successfully, the server will take a snapshot
 so that the client can't alter the backups, and then "prune" the backup 
