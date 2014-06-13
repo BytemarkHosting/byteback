@@ -31,18 +31,22 @@ def help
 
 Options:
    --destination, -d <s>:   Backup destination (i.e. user@host:/path)
-       --source, -s  <s>:   Source paths (defaults: / and /boot)
-       --exclude, -x <s>:   Exclude paths (defaults: /swap.file, /var/backups/localhost, /var/cache)
+       --source, -s  <s>:   Source paths (default: /)
+       --exclude, -x <s>:   Exclude paths (defaults: /swap.file, /var/backups/localhost, /var/cache/apt/archives, /var/lib/php5, /tmp, /var/tmp)
            --verbose, -v:   Show rsync command and progress
   --retry-number, -r <n>:   Number of retries on error (default: 3)
    --retry-delay, -e <n>:   Wait number of seconds between retries (default: 1800)
        --ssh-key, -k <s>:   SSH key for connection (default: /etc/byteback/key)
               --help, -h:   Show this message
+
+Additional excludes can be specified using /etc/byteback/rsync_filter, which is
+an rsync filter file.  See the rsync man page for information on how this
+works.
+
 EOF
   remove_lockfile!
   exit 0
 end
-
 
 opts = GetoptLong.new(
   [ '--help',       '-h', GetoptLong::NO_ARGUMENT ],
@@ -108,7 +112,7 @@ if Dir.exists?(File.dirname(@lockfile))
     # check the lockfile is sane
     exist_pid = File.read(@lockfile).to_i
     if exist_pid > 1 and exist_pid < (File.read("/proc/sys/kernel/pid_max").to_i)
-      begin 
+      begin
         Process.getpgid(exist_pid)
         # if no exception, process is running, abort
         error("Process is running (#{exist_pid} from #{@lockfile})! Exiting now.")
@@ -157,9 +161,23 @@ end
 # Validate and normalise excludes
 #
 if @excludes.nil?
-  @excludes = ["/swap.file", "/var/backups/localhost"]
-  @excludes << "/var/cache/apt/archives" if  File.directory?("/var/cache/apt/archives")
+  @excludes = %w(
+     /swap.file
+     /tmp
+     /var/backups/localhost
+     /var/cache/apt/archives
+     /var/lib/php5
+     /var/tmp
+  ).select do |x|
+    File.exists?(x)
+  end
 end
+
+
+#
+# Always add these filesystems
+#
+@excludes += %w(/dev /proc /run /sys)
 
 @excludes = @excludes.map do |e|
   e.gsub(/\/+/,"/")
