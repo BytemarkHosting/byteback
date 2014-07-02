@@ -1,3 +1,9 @@
+byteback (0.2.4-1) stable; urgency=medium
+
+  * Fixed a bug[?] with byteback-snapshot
+
+ -- James Hannah <james.hannah@bytemark.co.uk>  Wed, 02 Jul 2014 10:58:22 +0100
+
 byteback (0.2.3-1) stable; urgency=medium
 
   * Added lockfile to stop >1 backup running at once

@@ -150,7 +150,7 @@ class BackupDirectory
 	protected
 
 	def system_no_error(*args)
-    args += " > /dev/null" unless @verbose
+      args[-1] += " > /dev/null" unless @verbose
 		raise RuntimeError.new("Command failed: "+args.join(" ")) unless
 		  system(*args)
 	end
