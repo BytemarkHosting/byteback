@@ -1,3 +1,9 @@
+byteback (0.2.3-1) stable; urgency=medium
+
+  * Added lockfile to stop >1 backup running at once
+
+ -- James Hannah <james.hannah@bytemark.co.uk>  Wed, 02 Jul 2014 10:19:11 +0100
+
 byteback (0.2.2-1) stable; urgency=medium
 
   * Updated byteback not to use --one-filesystem flag.
