@@ -107,7 +107,7 @@ rescue => err
 end
 
 # Check the lockfile first
-if Dir.exists?(File.dirname(@lockfile))
+if File.directory?(File.dirname(@lockfile))
   if File.exists? @lockfile
     # check the lockfile is sane
     exist_pid = File.read(@lockfile).to_i
