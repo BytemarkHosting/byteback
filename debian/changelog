@@ -1,3 +1,10 @@
+byteback (0.2.6-1) stable; urgency=medium
+
+  * Don't retry if source files vanish, as this can lead to never-finishing
+    backups.
+
+ -- Patrick J Cherry <patch@dynamo>  Thu, 10 Jul 2014 21:48:43 +0100
+
 byteback (0.2.5-1) stable; urgency=medium
 
   * Fixed order of inject, allowing prune to work
