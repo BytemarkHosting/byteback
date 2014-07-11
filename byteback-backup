@@ -247,6 +247,12 @@ def rsync(*sources)
   return $?.exitstatus
 end
 
+#
+# We treat exit statuses 0 and 24 as success; 0 is "Success"; 24 is "Partial
+# transfer due to vanished source files", which we treat as success otherwise
+# on some hosts the backup process never finishes.
+#
+RSYNC_EXIT_STATUSES_TO_ACCEPT   = [0, 24]
 RSYNC_EXIT_STATUSES_TO_RETRY_ON = [10,11,20,21,22,23,30]
 
 # Run the file copy, retrying if necessary
@@ -254,9 +260,9 @@ RSYNC_EXIT_STATUSES_TO_RETRY_ON = [10,11,20,21,22,23,30]
 loop do
   status = rsync(*@sources)
 
-  if status === 0
+  if RSYNC_EXIT_STATUSES_TO_ACCEPT.any?{|s| s === status} 
     break
-  elsif RSYNC_EXIT_STATUSES_TO_RETRY_ON.include?(status)
+  elsif RSYNC_EXIT_STATUSES_TO_RETRY_ON.any?{|s| s === status}
     if @retry_number > 0
       @retry_number -= 1
       sleep @retry_delay
