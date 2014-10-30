@@ -167,13 +167,3 @@ daily backups, but as they get too numerous, we make sure that we are reluctant
 to delete our very oldest.
 
 [TODO: model it]
-
-Features to come
-----------------
-* spotting a /var/lib/mysql directory and making a safe snapshot and re-copy
-  of a MySQL data directory (using FLUSH TABLES WITH READ LOCK)
-
-* (same for postgres using pg_start_backup() and pg_stop_backup())
-
-* byteback-restore for easy restoration.
-
