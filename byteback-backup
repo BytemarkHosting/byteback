@@ -15,24 +15,23 @@ require 'byteback/log'
 include Byteback::Util
 include Byteback::Log
 
-lock_out_other_processes("byteback-backup")
 
 ME = $0.split("/").last
 
 opts = Trollop::options do
 
-  banner "#{ME}: Back up this system to a byteback-enabled server"
+  banner "#{ME}: Back up this system to a byteback-enabled server\n "
 
   opt :destination, "Backup destination (i.e. user@host:/path)",
       :type => :string
 
   opt :source, "Source paths",
-      :type => :strings
+      :type => :strings,
+      :default => ["/"]
 
-  opt :excludes, "Paths to exclude",
-      :type => :strings
-
-  banner "\nAdditional excludes can be specified using /etc/byteback/rsync_filter, which is an rsync filter file.  See the rsync man page for information on how this works.\n"
+  opt :exclude, "Paths to exclude",
+      :type => :strings, 
+      :short => "x"
 
   opt :verbose, "Show debugging messages"
 
@@ -46,15 +45,22 @@ opts = Trollop::options do
 
   opt :ssh_key, "SSH key filename",
       :type => :string,
-      :default => "/etc/byteback/key"
+      :default => "/etc/byteback/key",
+      :short => "k"
 
+  opt :help, "Show this message",
+      :short => "h"
+
+  banner "\nAdditional excludes can be specified using /etc/byteback/rsync_filter, which is an rsync filter file.  See the rsync man page for information on how this works.\n"
 
 end
+
+lock_out_other_processes("byteback-backup")
 
 @ssh_key = opts[:ssh_key]
 @verbose = opts[:verbose] ? "--verbose" : nil
 @sources = opts[:source] if opts[:source]
-@excludes = opts[:excludes] if opts[:excludes]
+@excludes = opts[:exclude] if opts[:exclude]
 @destination = opts[:destination]
 @retry_number = opts[:retry_number]
 @retry_delay = opts[:retry_delay]
