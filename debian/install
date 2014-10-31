@@ -1,6 +1,6 @@
-byteback /usr/bin
 byteback-backup /usr/bin
 byteback-receive /usr/bin
 byteback-setup-client /usr/bin
 byteback-setup-client-receive /usr/bin
 byteback-snapshot /usr/bin
+lib/* /usr/lib/byteback

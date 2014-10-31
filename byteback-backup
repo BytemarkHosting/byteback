@@ -6,66 +6,58 @@
 #
 # See 'man byteback' for more information.
 
-require 'getoptlong'
 require 'resolv'
 
-def remove_lockfile!
-  begin
-    File.unlink(@lockfile)
-  rescue Errno::ENOENT
-  end
+$LOAD_PATH.unshift("/usr/lib/byteback")
+require 'trollop'
+require 'byteback/util'
+require 'byteback/log'
+include Byteback::Util
+include Byteback::Log
+
+lock_out_other_processes("byteback-backup")
+
+ME = $0.split("/").last
+
+opts = Trollop::options do
+
+  banner "#{ME}: Back up this system to a byteback-enabled server"
+
+  opt :destination, "Backup destination (i.e. user@host:/path)",
+      :type => :string
+
+  opt :source, "Source paths",
+      :type => :strings
+
+  opt :excludes, "Paths to exclude",
+      :type => :strings
+
+  banner "\nAdditional excludes can be specified using /etc/byteback/rsync_filter, which is an rsync filter file.  See the rsync man page for information on how this works.\n"
+
+  opt :verbose, "Show debugging messages"
+
+  opt :retry_number, "Number of retries on error",
+      :type => :integer,
+      :default => 3
+
+  opt :retry_delay, "Number of seconds between retries after an error",
+      :type => :integer,
+      :default => 300
+
+  opt :ssh_key, "SSH key filename",
+      :type => :string,
+      :default => "/etc/byteback/key"
+
+
 end
 
-def error(message)
-  STDERR.print "*** #{message}\n"
-  exit 1
-end
-
-def verbose(message)
-  print "#{message}\n"
-end
-
-def help
-  puts <<EOF
-#{$0}: Back up this system to a byteback-enabled server
-
-Options:
-   --destination, -d <s>:   Backup destination (i.e. user@host:/path)
-       --source, -s  <s>:   Source paths (default: /)
-       --exclude, -x <s>:   Exclude paths (defaults: /swap.file, /var/backups/localhost, /var/cache/apt/archives, /var/lib/php5, /tmp, /var/tmp)
-           --verbose, -v:   Show rsync command and progress
-  --retry-number, -r <n>:   Number of retries on error (default: 3)
-   --retry-delay, -e <n>:   Wait number of seconds between retries (default: 1800)
-       --ssh-key, -k <s>:   SSH key for connection (default: /etc/byteback/key)
-              --help, -h:   Show this message
-
-Additional excludes can be specified using /etc/byteback/rsync_filter, which is
-an rsync filter file.  See the rsync man page for information on how this
-works.
-
-EOF
-  remove_lockfile!
-  exit 0
-end
-
-opts = GetoptLong.new(
-  [ '--help',       '-h', GetoptLong::NO_ARGUMENT ],
-  [ '--verbose',    '-v', GetoptLong::NO_ARGUMENT ],
-  [ '--source',     '-s', GetoptLong::REQUIRED_ARGUMENT ],
-  [ '--destination',   '-d', GetoptLong::REQUIRED_ARGUMENT ],
-  [ '--retry-number',  '-r', GetoptLong::REQUIRED_ARGUMENT ],
-  [ '--retry-delay',   '-e', GetoptLong::REQUIRED_ARGUMENT ],
-  [ '--ssh-key'       ,'-k', GetoptLong::REQUIRED_ARGUMENT ]
-)
-
-@ssh_key = nil
-@destination = nil
-@retry_number = 3
-@retry_delay = 1800
-@sources = nil
-@excludes = nil
-@lockfile = "/var/run/byteback/byteback.lock"
-
+@ssh_key = opts[:ssh_key]
+@verbose = opts[:verbose] ? "--verbose" : nil
+@sources = opts[:source] if opts[:source]
+@excludes = opts[:excludes] if opts[:excludes]
+@destination = opts[:destination]
+@retry_number = opts[:retry_number]
+@retry_delay = opts[:retry_delay]
 
 # Read the default destination
 if File.exists?("/etc/byteback/destination")
@@ -77,71 +69,13 @@ if File.exists?("/etc/byteback/key")
   @ssh_key = "/etc/byteback/key"
 end
 
-begin
-  opts.each do |opt,arg|
-    case opt
-    when '--help'
-      help = true
-    when '--verbose'
-      $VERBOSE = true
-    when "--source"
-      @sources ||= []
-      @sources << arg
-    when "--exclude"
-      @excludes ||= []
-      @excludes << arg
-    when "--destination"
-      @destination = arg
-    when "--retry-number"
-      @retry_number = arg.to_i
-    when "--retry-delay"
-      @retry_delay = arg.to_i
-    when "--ssh-key"
-      @ssh_key = arg
-    end
-  end
-rescue => err
-  # any errors, show the help
-  warn err.to_s
-  help = true
-end
-
-# Check the lockfile first
-if File.directory?(File.dirname(@lockfile))
-  if File.exists? @lockfile
-    # check the lockfile is sane
-    exist_pid = File.read(@lockfile).to_i
-    if exist_pid > 1 and exist_pid < (File.read("/proc/sys/kernel/pid_max").to_i)
-      begin
-        Process.getpgid(exist_pid)
-        # if no exception, process is running, abort
-        error("Process is running (#{exist_pid} from #{@lockfile})! Exiting now.")
-      rescue Errno::ESRCH
-        # no process running with that pid, pidfile is stale
-        remove_lockfile!
-      end
-    else
-      # lockfile isn't sane, remove it and continue
-      remove_lockfile!
-    end
-  end
-else
-  Dir.mkdir(File.dirname(@lockfile))
-  # lockfile didn't exist so just carry on
-end
-
-# Own the pidfile ourselves
-File.open(@lockfile, "w") do |lockfile|
-  lockfile.puts Process::pid
-end
-
 #
 # Check our destination
 #
 if @destination =~ /^(?:(.+)@)?([^@:]+):(.+)?$/
   @destination_user, @destination_host, @destination_path = [$1, $2, $3]
 else
-  error("Destination must be a remote path, e.g. ssh@host.com:/store/backups")
+  fatal("Destination must be a remote path, e.g. ssh@host.com:/store/backups")
 end
 
 #
@@ -149,50 +83,66 @@ end
 #
 @sources = ["/"] if @sources.nil?
 
-error("No sources specified") if @sources.empty?
+fatal("No sources specified") if @sources.empty?
 
 @sources = @sources.map do |s|
   s = s.gsub(/\/+/,"/")
-  error("Can't read directory #{s}") unless File.readable?(s)
+  fatal("Can't read directory #{s}") unless File.readable?(s)
   s
 end
 
-#
-# Validate and normalise excludes
+# Automatically exclude anything mounted on a non-local filesystem, plus
+# various cache and temporary directories common on Bytemark & Debian 
+# systems
 #
 if @excludes.nil?
-  @excludes = %w(
+
+  PROBABLY_LOCAL = %w( btrfs ext2 ext3 ext4 reiserfs xfs nilfs jfs reiser4 zfs )
+
+  COMMON_JUNK = %w(
      /swap.file
      /tmp
      /var/backups/localhost
      /var/cache/apt/archives
      /var/lib/php5
      /var/tmp
-  ).select do |x|
-    File.exists?(x)
+  )
+
+  MOUNT_HEADINGS = %w( spec file vfstype mntops freq passno ).
+    map(&:to_sym)
+
+  mounts = File.read("/proc/mounts").split("\n").map do |line|
+    Hash[MOUNT_HEADINGS.zip(line.split(" "))]
   end
+
+  @excludes = 
+
+    mounts.
+      select { |m| !PROBABLY_LOCAL.include?(m[:vfstype]) }.
+      map { |m| m[:file] } +
+
+    COMMON_JUNK.select { |f| File.exists?(f) }
+
 end
-
-
-#
-# Always add these filesystems
-#
-@excludes += %w(/dev /proc /run /sys)
 
 @excludes = @excludes.map do |e|
   e.gsub(/\/+/,"/")
 end
 
-error("Must suply --destination or put it into /etc/bytebackup/destination") unless @destination
+fatal("Must suply --destination or put it into /etc/bytebackup/destination") unless @destination
 
 #
 # Test ssh connection is good before we start
 #
-error("Could not read ssh key #{@ssh_key}") unless File.readable?(@ssh_key)
+fatal("Could not read ssh key #{@ssh_key}") unless File.readable?(@ssh_key)
 
 def ssh(*ssh_args)
   args = ["ssh",
     "-o", "BatchMode=yes",
+    "-o", "ConnectionAttempts=5",
+    "-o", "ConnectTimeout=30",
+    "-o", "ServerAliveInterval=60",
+    "-o", "TCPKeepAlive=yes",
     "-x", "-a",
     "-i", @ssh_key,
     "-l", @destination_user,
@@ -201,13 +151,11 @@ def ssh(*ssh_args)
   ssh_args.
   map { |a| a ? a : "" }
 
-  print args.map { |a| / /.match(a) ? "\"#{a}\"" : a }.join(" ")+"\n" if $VERBOSE
-
-  system(*args)
+  log_system(*args)
 end
 
-error("Could not connect to #{@destination}") unless
-  ssh("byteback-receive", "--ping", ($VERBOSE ? "--verbose" : "" ))
+fatal("Could not connect to #{@destination}") unless
+  ssh("byteback-receive", "--ping", @verbose) == 0
 
 #
 # Call rsync to copy certain sources, returns exit status (see man rsync)
@@ -217,10 +165,16 @@ def rsync(*sources)
   # at the end of the job, and rsync will do more work for big files without
   # it.
   #
-  args = %w(rsync --archive --numeric-ids --delete-delay --inplace --relative)
+  # The timeout is set to 12 hours - rsync can spend a long time at the
+  # far end checking over its files at the far end without transfer, so we
+  # want to wait as long as possible without jeopardising the timing of the
+  # next backup run.  Obviously if rsync itself takes nearly 24 hours for a 
+  # given filesystem, daily backups (with this tool) are out of the question.
+  #
+  args = %w( rsync --archive --numeric-ids --delete-delay --inplace --relative --timeout 43200 )
   args += [ "--rsync-path", "rsync --fake-super"]
   args += [ "--rsh", "ssh -o BatchMode=yes -x -a -i #{@ssh_key} -l #{@destination_user}"]
-  args << "--verbose" if $VERBOSE
+  args << "--verbose" if @verbose
   args += @excludes.map { |x| ["--exclude", x] }.flatten
 
   #
@@ -240,11 +194,7 @@ def rsync(*sources)
   args += sources
   args << @destination
 
-  print args.map { |a| / /.match(a) ? "\"#{a}\"" : a }.join(" ")+"\n" if $VERBOSE
-
-  system(*args)
-
-  return $?.exitstatus
+  log_system(*args)
 end
 
 #
@@ -263,21 +213,27 @@ loop do
   if RSYNC_EXIT_STATUSES_TO_ACCEPT.any?{|s| s === status} 
     break
   elsif RSYNC_EXIT_STATUSES_TO_RETRY_ON.any?{|s| s === status}
+
+    warn "rsync exited with status #{status}"
+
     if @retry_number > 0
+      warn "rsync will retry #{@retry_number} more times, sleeping #{@retry_delay}s"
       @retry_number -= 1
       sleep @retry_delay
       redo
     else
-      error("Maximum number of rsync retries reached")
+      fatal("Maximum number of rsync retries reached")
     end
   else
-    error("Fatal rsync error occurred (#{status})")
+    fatal("Fatal rsync error occurred (#{status})")
   end
 end
 
+info("Backup completed, requesting snapshot")
+
 # Mark the backup as done on the other end
 #
-error("Backup could not be marked complete") unless
-  ssh("sudo", "byteback-snapshot", "--snapshot", ($VERBOSE ? "--verbose" : ""))
+fatal("Backup could not be marked complete") unless
+  ssh("sudo", "byteback-snapshot", "--snapshot", @verbose) == 0
 
-remove_lockfile!
+info("Finished")
