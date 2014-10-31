@@ -1,2 +1,6 @@
 debian/byteback.substvars
 debian/byteback
+debian/patches
+debian/files
+debian/byteback.debhelper.log
+\.pc
