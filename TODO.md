@@ -4,7 +4,7 @@ TODO list for byteback
 * how do we stop backups from crashing server's kernel?
   * locking up completely (e.g. "touch newfile" never returns)
   * starting to run very very slowly until a btrfsck / remount
-  * often nothing to do but reboot :-/
+  * often nothing to do but "echo b > /proc/sysrq-trigger"
 
 * give nilfs / zfs a go as alternatives?
 
@@ -15,6 +15,10 @@ TODO list for byteback
 * (so introduce server-local cron job to keep on top of pruning and other stuff later)
 
 * byteback-restore program
+
+* out-of-date check should suspend judgment when backup is in progress
+
+* add idea of progress on server side?
 
 * clean ups: bundle trollop.rb, pull out cut & paste functions into library
 
