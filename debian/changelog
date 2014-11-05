@@ -1,3 +1,9 @@
+byteback (0.2.9-1) stable; urgency=medium
+
+  * Added byteback-prune
+
+ -- Matthew Bloch <matthew@bytemark.co.uk>  Fri, 31 Oct 2014 02:24:00 +0000
+
 byteback (0.2.8-1) stable; urgency=medium
 
   * Refactored to improve logging
