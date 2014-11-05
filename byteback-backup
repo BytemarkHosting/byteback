@@ -103,7 +103,19 @@ end
 #
 if @excludes.nil?
 
-  PROBABLY_LOCAL = %w( btrfs ext2 ext3 ext4 reiserfs xfs nilfs jfs reiser4 zfs )
+  PROBABLY_LOCAL = %w( 
+    btrfs 
+    ext2 
+    ext3 
+    ext4 
+    reiserfs 
+    xfs 
+    nilfs 
+    jfs 
+    reiser4 
+    zfs 
+    rootfs 
+  )
 
   COMMON_JUNK = %w(
      /swap.file
