@@ -167,3 +167,11 @@ daily backups, but as they get too numerous, we make sure that we are reluctant
 to delete our very oldest.
 
 [TODO: model it]
+
+Acknowledgements
+----------------
+For maximum portability, I've included two libraries.  Thanks very much to
+their authors:
+
+sys-filesystem by Daniel J. Berger: https://github.com/djberg96/sys-filesystem
+trollop by William Morgan: https://github.com/wjessop/trollop

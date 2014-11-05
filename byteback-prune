@@ -1,0 +1,112 @@
+#!/usr/bin/ruby
+#
+# Program to prune a byteback installation 
+
+$LOAD_PATH.unshift("/usr/lib/byteback")
+require 'trollop'
+require 'byteback'
+require 'sys/filesystem'
+include Byteback
+include Byteback::Log
+include Byteback::Util
+
+opts = Trollop::options do
+
+    banner "Prune old backup directories to ensure there's enough space"
+
+    opt :minpercent, "Start prune when disk has less than this %age free",
+        :type => :integer,
+        :default => 5
+
+    opt :maxpercent, "Stop prune when disk has more than this %age free",
+        :type => :integer,
+        :default => 10
+
+    opt :list, "List backups in pruning order, no other action"
+
+    opt :prune, "Prune the next backup if necessary"
+
+    opt :order, "Order backups by 'age' or 'importance'",
+    	:type => :string,
+    	:default => "importance"
+
+    opt :verbose, "Show debugging messages"
+
+end
+
+@order = opts[:order]
+@verbose = opts[:verbose]
+@do_list = opts[:list]
+@do_prune = opts[:prune]
+@minpercent = opts[:minpercent]
+@maxpercent = opts[:maxpercent]
+
+fatal("Must specify one of --prune or --list") unless 
+  (@do_prune || @do_list) && 
+  !(@do_prune && @do_list)
+
+fatal("Must specify --order as 'age' or 'importance'") unless
+  @order == 'age' || @order == 'importance'
+
+if BackupDirectory.all.empty?
+	fatal("No backup directories found, need to run byteback-snapshot")
+end
+
+@df_history = DiskFreeHistory.new(ENV['HOME'])
+@df_history.new_reading!
+
+# Don't do anything if we've not got two hours of readings
+#
+if @df_history.list.last.time - @df_history.list.first.time < 7200
+	warn("Not enough disc space history to make a decision")
+	exit 0
+end
+
+gradient_30m = @df_history.gradient(1800)
+debug("Disc space gradient over 30m = #{gradient_30m}")
+exit
+
+# Check whether we should still be pruning
+#
+@free = @df_history.list.last.percent_free
+PRUNING_FLAG = "#{ENV['HOME']}/.byteback.pruning"
+
+if @free <= @minpercent && !File.exists?(PRUNING_FLAG)
+	warn("Starting prune, #{@free}% free (aiming for #{@maxpercent})")
+	File.write(PRUNING_FLAG,"") 
+elsif @free >= @maxpercent && File.exists?(PRUNING_FLAG)
+	warn("Stopping prune, #{@free}% free")
+	File.unlink(PRUNING_FLAG) 
+elsif File.exists?(PRUNING_FLAG)
+	warn("Continuing prune, #{@free}% free (aiming for #{@maxpercent})")
+end
+
+def snapshots_in_order
+	list = BackupDirectory.all_snapshots
+	if list.empty?
+		warn("Couldn't find any snapshots (yet?)")
+	end
+	if @order == 'importance'
+		Snapshot.sort_by_importance(list)
+	elsif @order == 'age'
+		list.sort.reverse
+	else
+		raise ArgumentError.new("Unknown snapshot sort method #{method}")
+	end
+end
+
+snapshots = snapshots_in_order
+
+if @do_list
+	print "Backups by #{@order}:\n"
+	snapshots.each_with_index do |snapshot, index|
+		print "#{sprintf('% 3d',index)}: #{snapshot.path}\n"
+	end
+end
+
+exit 0 unless File.exists?(PRUNING_FLAG) && @do_prune
+
+exit 0 if gradient_30m != 0
+
+info("Deleting #{snapshots.last.path}")
+log_system("sudo btrfs subvolume delete #{snapshots.last.path}")

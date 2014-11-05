@@ -14,13 +14,7 @@ opts = Trollop::options do
     opt :root, "Backups directory (must be a btrfs subvolume)",
     	:type => :string
 
-    opt :snapshot, "Take a new snapshot"
-
-    opt :prune, "Prune old backups (by 'age' or 'importance')",
-    	:type => :string
-
-    opt :list, "List backups (by 'age' or 'importance')",
-    	:type => :string
+    opt :snapshot, "(ignored for compatibility)"
 
     opt :verbose, "Print diagnostics"
 
@@ -28,61 +22,17 @@ end
 
 @root = opts[:root]
 @verbose = opts[:verbose]
-@do_snapshot = opts[:snapshot]
-@do_list = opts[:list]
-@do_prune = opts[:prune]
-
-fatal("Must specify snapshot, prune or list") unless @do_snapshot || @do_prune || @do_list
 
 fatal("--root not readable") unless File.directory?("#{@root}")
 
 @backups = BackupDirectory.new(@root)
 
-def get_snapshots_by(method)
-	if method == 'importance'
-		@backups.snapshot_times_by_importance.reverse # least important first
-	elsif method == 'age'
-		@backups.snapshot_times
-	else
-		raise ArgumentError.new("Unknown snapshot sort method #{method}")
-	end
-end
+last_snapshot_time = @backups.snapshot_times.last
+fatal("Last snapshot was less than six hours ago") unless 
+	!last_snapshot_time || 
+	Time.now - @backups.snapshot_times.last >= 6*60*60 # FIXME: make configurable
 
-if @do_snapshot
-	last_snapshot_time = @backups.snapshot_times.last
-	fatal("Last snapshot was less than six hours ago") unless 
-		!last_snapshot_time || 
-		Time.now - @backups.snapshot_times.last >= 6*60*60 # FIXME: make configurable
-
-	info "Making new snapshot"
-	@backups.new_snapshot! 
-end
-
-if @do_list
-	list = get_snapshots_by(@do_list)
-	print "Backups in #{@root} by #{@do_list}:\n"
-	list.each_with_index do |time, index|
-		print "#{sprintf('% 3d',index)}: #{time}\n"
-	end
-end
-
-if @do_prune
-	info "Counting last 10 backups"
-	target_free_space = 1.5 * @backups.average_snapshot_size(10)
-	info "Want to ensure we have #{target_free_space}"
-
-	if @backups.free >= target_free_space
-		info "(we have #{@backups.free} so no action needed)"
-	else
-		list = get_snapshots_by(@do_prune)
-
-		while @backups.free < target_free_space && !list.empty?
-			to_delete = list.pop
-			info "Deleting #{to_delete}"
-			@backups.delete_snapshot!(to_delete)
-			info "Leaves us with #{@backups.free}"
-		end
-	end
-end
+info "Making new snapshot"
+@backups.new_snapshot! 
 
 info "Finished"
