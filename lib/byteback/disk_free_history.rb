@@ -43,7 +43,7 @@ module Byteback
 			# and less than the minimum interval.
 			#
 			return nil if @list.last && 
-			  @list.last.fsstat.blocks_available == reading.fsstat.blocks_available
+			  @list.last.fsstat.blocks_available == reading.fsstat.blocks_available &&
 			  Time.now - @list.last.time < MINIMUM_INTERVAL
 
 			@list << reading
@@ -96,7 +96,7 @@ module Byteback
 		def save!
 			list.shift while Time.now - list.first.time > MAXIMUM_AGE
 
-			tmp = "@history_file.#{$$}.#{rand(9999999999)}"
+			tmp = "@{history_file}.#{$$}.#{rand(9999999999)}"
 			begin
 				File.open(tmp, "w") do |fh|
 					fh.write(Marshal.dump(list))
