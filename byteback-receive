@@ -5,6 +5,7 @@
 
 #STDERR.print ARGV.inspect + "\n"
 
+$LOAD_PATH << '/usr/lib/byteback'
 require 'trollop'
 
 def error(message)
