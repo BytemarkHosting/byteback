@@ -4,3 +4,7 @@ debian/patches
 debian/files
 debian/byteback.debhelper.log
 \.pc
+byteback.sublime-project
+byteback.sublime-workspace
+
+
