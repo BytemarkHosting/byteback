@@ -26,6 +26,8 @@ opts = Trollop::options do
 
     opt :prune, "Prune the next backup if necessary"
 
+    opt :prune_force, "Prune the next backup regardless"
+
     opt :order, "Order backups by 'age' or 'importance'",
     	:type => :string,
     	:default => "importance"
@@ -38,8 +40,11 @@ end
 @verbose = opts[:verbose]
 @do_list = opts[:list]
 @do_prune = opts[:prune]
+@do_prune_force = opts[:prune_force]
 @minpercent = opts[:minpercent]
 @maxpercent = opts[:maxpercent]
+
+@do_prune = true if @do_prune_force
 
 fatal("Must specify one of --prune or --list") unless 
   (@do_prune || @do_list) && 
@@ -55,23 +60,16 @@ end
 @df_history = DiskFreeHistory.new(ENV['HOME'])
 @df_history.new_reading!
 
-# Don't do anything if we've not got two hours of readings
-#
-if @df_history.list.last.time - @df_history.list.first.time < 7200
-	warn("Not enough disc space history to make a decision")
-	exit 0
-end
-
 gradient_30m = @df_history.gradient(1800)
-debug("Disc space gradient over 30m = #{gradient_30m}")
-exit
 
 # Check whether we should still be pruning
 #
 @free = @df_history.list.last.percent_free
 PRUNING_FLAG = "#{ENV['HOME']}/.byteback.pruning"
 
-if @free <= @minpercent && !File.exists?(PRUNING_FLAG)
+if @do_prune_force
+	warn("Forcing prune")
+elsif @free <= @minpercent && !File.exists?(PRUNING_FLAG)
 	warn("Starting prune, #{@free}% free (aiming for #{@maxpercent})")
 	File.write(PRUNING_FLAG,"") 
 elsif @free >= @maxpercent && File.exists?(PRUNING_FLAG)
@@ -80,6 +78,8 @@ elsif @free >= @maxpercent && File.exists?(PRUNING_FLAG)
 elsif File.exists?(PRUNING_FLAG)
 	warn("Continuing prune, #{@free}% free (aiming for #{@maxpercent})")
 end
+
+debug("Disc free #{@free}%, 30m gradient = #{gradient_30m}")
 
 def snapshots_in_order
 	list = BackupDirectory.all_snapshots
@@ -104,9 +104,18 @@ if @do_list
 	end
 end
 
+# Don't do anything if we've not got two hours of readings
+#
+if !@do_prune_force
+    if @df_history.list.last.time - @df_history.list.first.time < 1800
+	    warn("Not enough disc space history to make a decision")
+	    exit 0
+    end
+end
+
 exit 0 unless File.exists?(PRUNING_FLAG) && @do_prune
 
-exit 0 if gradient_30m != 0
+exit 0 unless @do_prune_force || gradient_30m == 0
 
 info("Deleting #{snapshots.last.path}")
 log_system("sudo btrfs subvolume delete #{snapshots.last.path}")

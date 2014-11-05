@@ -70,7 +70,6 @@ module Byteback
 						value_from_reading.call(reading) -
 						value_from_reading.call(later_reading)
 					total += difference
-					p difference
 				end
 				break if reading.time < earliest
 				readings += 1
@@ -96,7 +95,7 @@ module Byteback
 		def save!
 			list.shift while Time.now - list.first.time > MAXIMUM_AGE
 
-			tmp = "@{history_file}.#{$$}.#{rand(9999999999)}"
+			tmp = "#{@history_file}.#{$$}.#{rand(9999999999)}"
 			begin
 				File.open(tmp, "w") do |fh|
 					fh.write(Marshal.dump(list))
