@@ -5,3 +5,4 @@ byteback-setup-client-receive /usr/bin
 byteback-snapshot /usr/bin
 byteback-prune /usr/bin
 lib/* /usr/lib/byteback
+sudoers.d/byteback /etc/sudoers.d/

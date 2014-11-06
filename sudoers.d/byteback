@@ -1,0 +1,7 @@
+# sudoers file for byteback
+#
+byteback ALL = (root) NOPASSWD: /usr/bin/byteback-snapshot
+byteback ALL = (root) NOPASSWD: /sbin/btrfs subvolume create /store/backups/*/current
+byteback ALL = (root) NOPASSWD: /sbin/btrfs subvolume delete /store/backups/*
+
+Defaults:byteback !requiretty
