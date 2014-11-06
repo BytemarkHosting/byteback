@@ -7,6 +7,8 @@
 
 $LOAD_PATH << '/usr/lib/byteback'
 require 'trollop'
+require 'byteback'
+include Byteback::Log
 
 #debug "ARGV=#{ARGV.inspect}\nSSH_ORIGINAL_COMMAND=#{ENV['SSH_ORIGINAL_COMMAND']}\n"
 
