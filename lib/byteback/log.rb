@@ -3,15 +3,21 @@ require 'syslog'
 
 module Byteback
 	# Translates Ruby's Logger calls to similar calls to Syslog 
-	# (implemented in Ruby 2.0 as Syslog::Logger)
+	# (implemented in Ruby 2.0 as Syslog::Logger).
+	# 
+	# We need to neuter % signs which are taken as format strings.
 	#
 	class SyslogProxy
 		class << self
-			def debug(*a); Syslog.log(Syslog::LOG_DEBUG, *a); end
-			def info(*a); Syslog.log(Syslog::LOG_INFO, *a); end
-			def warn(*a); Syslog.log(Syslog::LOG_WARNING, *a); end
-			def error(*a); Syslog.log(Syslog::LOG_ERR, *a); end
-			def fatal(*a); Syslog.log(Syslog::LOG_EMERG, *a); end
+			def debug(m); log_nopc(Syslog::LOG_DEBUG, m); end
+			def info(m); log_nopc(Syslog::LOG_INFO, m); end
+			def warn(m); log_nopc(Syslog::LOG_WARNING, m); end
+			def error(m); log_nopc(Syslog::LOG_ERR, m); end
+			def fatal(m); log_nopc(Syslog::LOG_EMERG, m); end
+
+			def log_nopc(level, m)
+				Syslog.log(level, m.gsub("%","%%"))
+			end
 		end
 	end
 
