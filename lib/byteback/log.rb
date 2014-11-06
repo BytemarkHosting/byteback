@@ -9,7 +9,7 @@ module Byteback
 		class << self
 			def debug(*a); Syslog.log(Syslog::LOG_DEBUG, *a); end
 			def info(*a); Syslog.log(Syslog::LOG_INFO, *a); end
-			def warn(*a); Syslog.log(Syslog::LOG_WARN, *a); end
+			def warn(*a); Syslog.log(Syslog::LOG_WARNING, *a); end
 			def error(*a); Syslog.log(Syslog::LOG_ERR, *a); end
 			def fatal(*a); Syslog.log(Syslog::LOG_EMERG, *a); end
 		end
