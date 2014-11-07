@@ -139,7 +139,7 @@ module Byteback
 		# Create a new snapshot of 'current'
 		#
 		def new_snapshot!(time = Time.now)
-			snapshot_path = time.strftime(dir+"/%Y-%m-%dT%H:%M%z")
+			snapshot_path = time.strftime(dir.path + "/%Y-%m-%dT%H:%M%z")
 			Snapshot.new(self, snapshot_path).create!(current.path)
 		end
 
