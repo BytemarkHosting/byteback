@@ -20,6 +20,8 @@ module Byteback
 	# point's disk space history.
 	#
 	class DiskFreeHistory
+		attr_reader :mountpoint, :history_file
+
 		MINIMUM_INTERVAL = 5*60 # don't take readings more than 5 mins apart
 		MAXIMUM_AGE = 7*24*60*60 # delete readings after a week
 
@@ -71,10 +73,12 @@ module Byteback
 						value_from_reading.call(later_reading)
 					total += difference
 				end
-				break if reading.time < earliest
 				readings += 1
+				break if reading.time < earliest
 				later_reading = reading
 			end
+
+			return 0 if readings == 0
 
 			total / readings
 		end
