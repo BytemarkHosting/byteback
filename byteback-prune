@@ -57,8 +57,15 @@ if BackupDirectory.all.empty?
 	fatal("No backup directories found, need to run byteback-snapshot")
 end
 
+lock_out_other_processes("byteback-prune")
+
 @df_history = DiskFreeHistory.new(ENV['HOME'])
-@df_history.new_reading!
+begin
+	@df_history.new_reading!
+rescue => anything
+	error("Couldn't record disk history of #{@df_history.mountpoint} in #{@df_history.history_file}, installation problem?")
+	raise
+end
 
 gradient_30m = @df_history.gradient(1800)
 
@@ -68,15 +75,15 @@ gradient_30m = @df_history.gradient(1800)
 PRUNING_FLAG = "#{ENV['HOME']}/.byteback.pruning"
 
 if @do_prune_force
-	warn("Forcing prune")
+	info("Forcing prune")
 elsif @free <= @minpercent && !File.exists?(PRUNING_FLAG)
-	warn("Starting prune, #{@free}% free (aiming for #{@maxpercent})")
+	info("Starting prune #{@free}% -> #{@maxpercent} free")
 	File.write(PRUNING_FLAG,"") 
 elsif @free >= @maxpercent && File.exists?(PRUNING_FLAG)
-	warn("Stopping prune, #{@free}% free")
+	info("Stopping prune, reached #{@free}% free")
 	File.unlink(PRUNING_FLAG) 
 elsif File.exists?(PRUNING_FLAG)
-	warn("Continuing prune, #{@free}% free (aiming for #{@maxpercent})")
+	info("Continuing prune #{@free}% -> #{@maxpercent}, gradient = #{gradient_30m}")
 end
 
 debug("Disc free #{@free}%, 30m gradient = #{gradient_30m}")
