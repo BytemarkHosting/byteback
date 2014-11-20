@@ -8,7 +8,7 @@ module Byteback
 			# Order backups by their closeness to defined backup times, which are
 			# listed in a set order (i.e. today's backup is more important than yesterday's).
 			#
-			BACKUP_IMPORTANCE = [0, 1, 2, 3, 7, 14, 21, 28, 56, 112]
+			BACKUP_IMPORTANCE = [0, 1, 2, 7, 14, 21, 28, 56, 112]
 
 			def sort_by_importance(snapshots_unsorted, now=Time.now)
 				snapshots_sorted = []
