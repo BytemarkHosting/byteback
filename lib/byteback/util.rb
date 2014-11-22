@@ -2,7 +2,7 @@ require 'tempfile'
 
 module Byteback
 	module Util
-		@@lockfile = "/var/run/byteback/byteback.lock"
+		@@lockfile = "/var/lock/byteback/byteback.lock"
 
 		def remove_lockfile!
 		  begin
