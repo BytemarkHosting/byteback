@@ -26,11 +26,14 @@ end
 fatal("--root not readable") unless File.directory?("#{@root}")
 
 @backups = BackupDirectory.new(@root)
+snapshots = @backups.snapshots
 
-last_snapshot_time = @backups.snapshots.last.time
-fatal("Last snapshot was less than six hours ago") unless 
-	!last_snapshot_time || 
-	Time.now - last_snapshot_time >= 6*60*60 # FIXME: make configurable
+if !snapshots.empty?
+	last_snapshot_time = snapshots.last.time
+	fatal("Last snapshot was less than six hours ago") unless 
+		!last_snapshot_time || 
+		Time.now - last_snapshot_time >= 6*60*60 # FIXME: make configurable
+end
 
 info "Making new snapshot"
 @backups.new_snapshot! 
