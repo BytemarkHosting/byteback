@@ -90,9 +90,6 @@ debug("Disc free #{@free}%, 30m gradient = #{gradient_30m}")
 
 def snapshots_in_order
 	list = BackupDirectory.all_snapshots
-	if list.empty?
-		warn("Couldn't find any snapshots (yet?)")
-	end
 	if @order == 'importance'
 		Snapshot.sort_by_importance(list)
 	elsif @order == 'age'
@@ -123,6 +120,11 @@ end
 exit 0 unless File.exists?(PRUNING_FLAG) && @do_prune
 
 exit 0 unless @do_prune_force || gradient_30m == 0
+
+if snapshots.empty?
+	error("No snapshots to delete, is there enough disc space?")
+	exit 1
+end
 
 info("Deleting #{snapshots.last.path}")
 log_system("sudo btrfs subvolume delete #{snapshots.last.path}")
