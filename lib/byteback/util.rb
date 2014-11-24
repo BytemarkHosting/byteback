@@ -43,7 +43,7 @@ module Byteback
 		end
 
 		def lock_out_other_processes(name)
-			@@lockfile = "/var/run/byteback/#{name}.lock"
+			@@lockfile = "/var/lock/byteback/#{name}.lock"
 			claim_lockfile!
 			at_exit { remove_lockfile! }
 		end
