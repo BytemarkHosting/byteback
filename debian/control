@@ -10,7 +10,7 @@ Homepage: https://projects.bytemark.co.uk/projects/byteback
 
 Package: byteback
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}, ruby | ruby-interpreter, rsync, openssh-client, sudo, ruby-ffi | libffi-ruby
+Depends: ${shlibs:Depends}, ${misc:Depends}, ruby | ruby-interpreter, rsync, openssh-client, ruby-ffi | libffi-ruby
 Description: Maintenance-free client & server backup scripts for Linux
   byteback encapsulates Bytemark's "best practice" for maintenance-free backups
   with easy client and server setup.

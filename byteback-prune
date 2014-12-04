@@ -127,4 +127,4 @@ if snapshots.empty?
 end
 
 info("Deleting #{snapshots.last.path}")
-log_system("sudo btrfs subvolume delete #{snapshots.last.path}")
+log_system("btrfs subvolume delete #{snapshots.last.path}")

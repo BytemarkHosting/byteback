@@ -252,6 +252,6 @@ info("Backup completed, requesting snapshot")
 # Mark the backup as done on the other end
 #
 fatal("Backup could not be marked complete") unless
-  ssh("sudo", "byteback-snapshot", "--snapshot", @verbose) == 0
+  ssh("byteback-snapshot", "--snapshot", @verbose) == 0
 
 info("Finished")

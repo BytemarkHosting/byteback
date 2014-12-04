@@ -19,12 +19,14 @@ the server address should be enough.
 Setting up: server
 ------------------
 Install the 'byteback' package on the server, along with its dependencies
-(rsync, sudo).
+(rsync and ruby-ffi).
 
 You then need to perform the following local setup on the server, which can
 securely handle backups for multiple clients.  You need a dedicated user
 (which is usually called 'byteback') with a home directory on a btrfs 
-filesystem, and some privileges to run commands through sudo.
+filesystem.  You will need to mount the filesystem with the 
+'user_subvol_rm_allowed' flag to enable pruning to work (or run that part
+as root).
 
 The following commands are appropriate for a Debian system, you might need 
 to alter it for other Linux distributions, or if you are not using LVM
@@ -34,15 +36,6 @@ for your discs:
 	# allow logins
 	#
 	adduser --system byteback --home /byteback --shell /bin/bash
-
-	# Allow the backup user to run the snapshot command
-	#
-	# echo <<SUDOERS >/etc/sudoers.d/byteback
-	byteback ALL = (root) NOPASSWD: /usr/local/bin/byteback-snapshot
-	byteback ALL = (root) NOPASSWD: /usr/bin/byteback-snapshot
-	byteback ALL = (root) NOPASSWD: /sbin/btrfs subvolume create
-	Defaults:byteback !requiretty
-	SUDOERS
 
 	# Create a dedicated btrfs filesystem for the user, and add that as its home
 	#

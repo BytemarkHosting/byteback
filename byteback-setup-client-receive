@@ -27,13 +27,10 @@ error("You must call this from byteback-setup-client on remote host") unless
 
 Dir.chdir(ENV['HOME']) # don't know why we wouldn't be here
 
-Dir.mkdir(@hostname)
+FileUtils.mkdir_p(@hostname)
 
-error("Couldn't create btrfs subvolume (needs sudo)") unless 
-	system("sudo btrfs subvolume create #{@hostname}/current")
-
-error("Couldn't set ownership of new subvolume (need sudo)") unless 
-	system("sudo chown byteback "+File.expand_path("#{@hostname}/current"))
+error("Couldn't create btrfs subvolume") unless 
+	system("btrfs subvolume create #{@hostname}/current")
 
 FileUtils.mkdir_p(".ssh")
 

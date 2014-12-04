@@ -29,7 +29,7 @@ fatal("#{byteback_root} does not exist") unless File.directory?(byteback_root)
 if ARGV[0] == 'rsync'
 	ARGV[-1] = "#{byteback_root}/current"
 	exec(*ARGV)
-elsif ARGV[0] == 'byteback-snapshot' || (ARGV[0] == 'sudo' && ARGV[1] == 'byteback-snapshot')
+elsif ARGV[0] == 'byteback-snapshot'
 	ARGV.concat(["--root", "#{byteback_root}"])
 	exec(*ARGV)
 end
