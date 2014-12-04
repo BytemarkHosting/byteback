@@ -1,6 +1,8 @@
 TODO list for byteback
 ======================
 
+* "backup could not be marked as complete" message unhelpful on client system - why?
+
 * how do we stop backups from crashing server's kernel?
   * locking up completely (e.g. "touch newfile" never returns)
   * starting to run very very slowly until a btrfsck / remount
