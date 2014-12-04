@@ -32,6 +32,9 @@ Dir.mkdir(@hostname)
 error("Couldn't create btrfs subvolume (needs sudo)") unless 
 	system("sudo btrfs subvolume create #{@hostname}/current")
 
+error("Couldn't set ownership of new subvolume (need sudo)") unless 
+	system("sudo chown byteback "+File.expand_path("#{@hostname}/current"))
+
 FileUtils.mkdir_p(".ssh")
 
 if File.exists?(".ssh/authorized_keys") && 
@@ -42,7 +45,7 @@ if File.exists?(".ssh/authorized_keys") &&
 else
 
 	File.open(".ssh/authorized_keys", "a+") do |fh|
-		fh.print <<-LINE.gsub(/\n/,"")
+		fh.print <<-LINE.gsub(/\n/,"") + "\n"
 command="byteback-receive",
 from="#{@client_ip}",
 environment="BYTEBACK_HOST=#{@hostname}"
