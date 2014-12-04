@@ -30,7 +30,7 @@ Dir.chdir(ENV['HOME']) # don't know why we wouldn't be here
 FileUtils.mkdir_p(@hostname)
 
 error("Couldn't create btrfs subvolume") unless 
-	system("btrfs subvolume create #{@hostname}/current")
+	system("/sbin/btrfs subvolume create #{@hostname}/current")
 
 FileUtils.mkdir_p(".ssh")
 

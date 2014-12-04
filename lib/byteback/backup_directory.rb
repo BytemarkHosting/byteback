@@ -53,11 +53,11 @@ module Byteback
 		end
 
 		def create!(from)
-			system_no_error("btrfs subvolume snapshot #{from} #{path}")
+			system_no_error("/sbin/btrfs subvolume snapshot #{from} #{path}")
 		end
 
 		def delete!
-			system_no_error("btrfs subvolume delete #{path}")
+			system_no_error("/sbin/btrfs subvolume delete #{path}")
 		end
 
 		# Returns the size of the given snapshot (runs du, may be slow)
