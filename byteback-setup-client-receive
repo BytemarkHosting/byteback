@@ -2,7 +2,13 @@
 #
 # Called by byteback-setup-client to set up a new byteback-setup-client
 
+$: << '/usr/lib/byteback'
 require 'fileutils'
+require 'trollop'
+require 'byteback/util'
+require 'byteback/log'
+include Byteback::Util
+include Byteback::Log
 
 def error(message)
 	STDERR.print "*** #{message}\n"
@@ -28,15 +34,19 @@ error("Couldn't create btrfs subvolume (needs sudo)") unless
 
 FileUtils.mkdir_p(".ssh")
 
-error("This key already exists in .ssh/authorized_keys on server") if
-	File.exists?(".ssh/authorized_keys") &&
+if File.exists?(".ssh/authorized_keys") && 
 	File.read(".ssh/authorized_keys").match(@pubkey.split(/\s+/)[1])
 
-File.open(".ssh/authorized_keys", "a+") do |fh|
-	fh.print <<-LINE.gsub(/\n/,"")
+	warn("This key already exists in .ssh/authorized_keys on server, nothing to do!") 
+
+else
+
+	File.open(".ssh/authorized_keys", "a+") do |fh|
+		fh.print <<-LINE.gsub(/\n/,"")
 command="byteback-receive",
 from="#{@client_ip}",
 environment="BYTEBACK_HOST=#{@hostname}"
  #{@pubkey}
-	LINE
+		LINE
+	end
 end
