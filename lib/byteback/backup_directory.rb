@@ -8,27 +8,35 @@ module Byteback
 			# Order backups by their closeness to defined backup times, which are
 			# listed in a set order (i.e. today's backup is more important than yesterday's).
 			#
-			BACKUP_IMPORTANCE = [0, 1, 2, 7, 14, 21, 28, 56, 112]
+			BACKUP_IMPORTANCE = [1, 2, 7, 14, 21, 28, 56, 112]
 
 			def sort_by_importance(snapshots_unsorted, now=Time.now)
 				snapshots_sorted = []
+				scores = Array.new{|h,k| h[k] = []}
+				times  = snapshots_unsorted.map(&:time)
 
-				# FIXME: takes about a minute to sort 900 items,
-				# seems like that ought to be quicker than O(n^2)
+				BACKUP_IMPORTANCE.each_with_index do |days, backup_idx|
+						target_time = now.to_i - (days*86400)
+						weight = days.to_f - (backup_idx == 0 ? 0 : BACKUP_IMPORTANCE[backup_idx-1])
+						scores << times.map{|t| (t.to_i - target_time).abs/weight }
+				end
+
 				#
-				while !snapshots_unsorted.empty?
-					BACKUP_IMPORTANCE.each do |days|
-						target_time = now - (days*86400)
-						closest = snapshots_unsorted.inject(nil) do |best, snapshot|
-							if best.nil? || (snapshot.time-target_time).abs < (best.time-target_time).abs
-								snapshot
-							else
-								best
-							end
-						end
-						break unless closest
-						snapshots_sorted << snapshots_unsorted.delete(closest)
-					end
+				# Find the index of the lowest score from the list of BACKUP_IMPORTANCE
+				#
+				nearest_target = scores.transpose.map{|s| s.find_index(s.min)}
+
+				BACKUP_IMPORTANCE.each_index do |backup_idx|
+					#
+					# Find the indicies of the snapshots that match the current BACKUP_IMPORTANCE index, and sort them according to their score.
+					best_snapshot_idxs = nearest_target.each_index.
+						select{|i| nearest_target[i] == backup_idx}.
+						sort{|a,b| scores[backup_idx][a] <=> scores[backup_idx][b]}
+
+					#
+					# Append them to the array.
+					#
+					snapshots_sorted += snapshots_unsorted.values_at(*best_snapshot_idxs)
 				end
 
 				snapshots_sorted
@@ -45,7 +53,7 @@ module Byteback
 		end
 
 		def time
-			Time.parse(path)
+			Time.parse(File.basename(path))
 		end
 
 		def <=>(b)
