@@ -11,35 +11,86 @@ module Byteback
 			BACKUP_IMPORTANCE = [1, 2, 7, 14, 21, 28, 56, 112]
 
 			def sort_by_importance(snapshots_unsorted, now=Time.now)
-				snapshots_sorted = []
-				scores = Array.new{|h,k| h[k] = []}
-				times  = snapshots_unsorted.map(&:time)
+        # 
+        # Keep the last 7 days backups
+        #
+        snapshots_sorted   = []
+        snapshots_unsorted = snapshots_unsorted.sort_by(&:time).reverse
+        
+        #
+        # Group snapshots by host
+        #
+        snapshots_by_host = Hash.new{|h,k| h[k] = []}
 
-				BACKUP_IMPORTANCE.each_with_index do |days, backup_idx|
-						target_time = now.to_i - (days*86400)
-						weight = days.to_f - (backup_idx == 0 ? 0 : BACKUP_IMPORTANCE[backup_idx-1])
-						scores << times.map{|t| (t.to_i - target_time).abs/weight }
-				end
+        snapshots_unsorted.each do |snapshot|
+          snapshots_by_host[snapshot.host] << snapshot
+        end
 
-				#
-				# Find the index of the lowest score from the list of BACKUP_IMPORTANCE
-				#
-				nearest_target = scores.transpose.map{|s| s.find_index(s.min)}
+        #
+        # We want the snapshot nearest to the middle of the day each day.
+        #
+        today_midday = Time.mktime(*([0,0,12]+now.utc.to_a.last(7)))
 
-				BACKUP_IMPORTANCE.each_index do |backup_idx|
-					#
-					# Find the indicies of the snapshots that match the current BACKUP_IMPORTANCE index, and sort them according to their score.
-					best_snapshot_idxs = nearest_target.each_index.
-						select{|i| nearest_target[i] == backup_idx}.
-						sort{|a,b| scores[backup_idx][a] <=> scores[backup_idx][b]}
+        #
+        # We want today, and the previous seven days
+        #
+        targets = [today_midday]
+        targets += 6.times.map{ today_midday -= 86400 }
 
-					#
-					# Append them to the array.
-					#
-					snapshots_sorted += snapshots_unsorted.values_at(*best_snapshot_idxs)
-				end
+        #
+        # Now the previous four Sundays (we should bump on a week if today is a Sunday!)
+        #
+        today_midday -= (today_midday.wday == 0 ? 7 : today_midday.wday )*86400
+        targets << today_midday
+        targets += 3.times.map{ today_midday -= 7*86400 }
 
-				snapshots_sorted
+        #
+        # Our 28 day periods are anchored on Time.at(0).  However this was a
+        # Thursday, so we have to add 3 days to get it to Sunday.
+        #
+        targets << (today_midday -= ((today_midday.to_i / 86400.0).floor % 28 - 3)*86400)  
+
+        #
+        # Continue removing 28 day periods until we get beyond the oldest backup time.
+        #
+        targets << (today_midday -= 28*86400) while today_midday > snapshots_unsorted.last.time
+
+        #
+        # This has records the last nearest snapshot for each host
+        #
+        last_nearest = {}
+
+        #
+        # For each target, and for each host, find the nearest snapshot
+        #
+        targets.each do |target|
+          snapshots_by_host.each do |host, snapshots|
+            next if snapshots.empty?
+
+            nearest = snapshots.sort{|a,b| (a.time - target).abs <=> (b.time - target).abs }.first
+
+            #
+            # Don't process any more if the last snapshot for this for this
+            # host was more recent, i.e. we've reached the oldest, and are
+            # bouncing back again.
+            #
+            if last_nearest[host].nil? or last_nearest[host].time > nearest.time
+              last_nearest[host] = nearest
+              snapshots_by_host[host]  -= [nearest]
+              snapshots_sorted         << nearest
+            end
+
+          end
+
+        end
+
+        #
+        # Remove any snapshots we've already sorted and add in the remaining snapshots
+        #
+        snapshots_unsorted -= snapshots_sorted
+        snapshots_sorted   += snapshots_unsorted
+
+			  snapshots_sorted 
 			end
 		end
 
@@ -48,13 +99,17 @@ module Byteback
 		def initialize(backup_directory, snapshot_path)
 			@backup_directory = backup_directory
 			@path = snapshot_path
-			time # throws ArgumentError if it can't parse
+			@time = Time.parse(File.basename(path)) # throws ArgumentError if it can't parse
 			nil
 		end
 
 		def time
-			Time.parse(File.basename(path))
+      @time
 		end
+
+    def host
+      File.basename(File.dirname(path))
+    end
 
 		def <=>(b)
 			time <=> b.time
