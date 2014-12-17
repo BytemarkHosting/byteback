@@ -190,6 +190,7 @@ def rsync(*sources)
   # given filesystem, daily backups (with this tool) are out of the question.
   #
   args = %w( rsync --archive --numeric-ids --delete-delay --inplace --relative --timeout 43200 )
+  args += [ "--xattrs", "--hard-links", "--acls" ]
   args += [ "--rsync-path", "rsync --fake-super"]
   args += [ "--rsh", "ssh -o BatchMode=yes -x -a -i #{@ssh_key} -l #{@destination_user}"]
   args << "--verbose" if @verbose
