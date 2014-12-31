@@ -62,7 +62,14 @@ lock_out_other_processes("byteback-prune")
 @df_history = DiskFreeHistory.new(ENV['HOME'])
 begin
 	@df_history.new_reading!
-rescue => anything
+rescue Errno::ENOSPC
+	if @do_list
+		warn("Couldn't write disk history file due to lack of space, ignoring")		
+	else
+		warn("Couldn't write disk history file due to lack of space, going to --prune-force")
+		@do_prune = @do_prune_force = true
+	end
+rescue => anything_else
 	error("Couldn't record disk history of #{@df_history.mountpoint} in #{@df_history.history_file}, installation problem?")
 	raise
 end
@@ -117,7 +124,9 @@ if !@do_prune_force
     end
 end
 
-exit 0 unless File.exists?(PRUNING_FLAG) && @do_prune
+exit 0 unless 
+  (@do_prune && File.exists?(PRUNING_FLAG)) ||
+  @do_prune_force
 
 exit 0 unless @do_prune_force || gradient_30m == 0
 

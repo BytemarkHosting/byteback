@@ -1,6 +1,10 @@
 TODO list for byteback
 ======================
 
+* byteback directory should be at the end of the load path, not start
+
+* change default retry parameters to cover 24 hour window
+
 * "backup could not be marked as complete" message unhelpful on client system - why?
 
 * how do we stop backups from crashing server's kernel?
