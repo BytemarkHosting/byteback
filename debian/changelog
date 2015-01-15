@@ -1,3 +1,11 @@
+byteback (0.3.2) stable; urgency=medium
+
+  * Backup importance sorting updated to keep a time order.
+  * Deal with Errno::ENOSPC condition
+  * Added --xattrs --hard-links --acls to rsync
+
+ -- Patrick J Cherry <patrick@bytemark.co.uk>  Thu, 15 Jan 2015 11:53:45 +0000
+
 byteback (0.3.1) stable; urgency=medium
 
   * Bug fixes to byteback-setup-client and byteback-setup-client-receive
