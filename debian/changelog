@@ -1,3 +1,9 @@
+byteback (0.3.3) stable; urgency=medium
+
+  * Fixed snapshotting at the end of the copy.
+
+ -- Patrick J Cherry <patrick@bytemark.co.uk>  Mon, 19 Jan 2015 13:21:36 +0000
+
 byteback (0.3.2) stable; urgency=medium
 
   * Backup importance sorting updated to keep a time order.
