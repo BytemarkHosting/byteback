@@ -42,7 +42,7 @@ end
 
 error("Please only choose one mode") if opts[:ping] && opts[:complete]
 if opts[:complete]
-	system("byteback-snapshot", byteback_root)
+	system("byteback-snapshot", "--root", byteback_root)
 elsif opts[:ping]
 	exit 0
 else
