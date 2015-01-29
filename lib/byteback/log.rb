@@ -13,7 +13,16 @@ module Byteback
 			def info(m); log_nopc(Syslog::LOG_INFO, m); end
 			def warn(m); log_nopc(Syslog::LOG_WARNING, m); end
 			def error(m); log_nopc(Syslog::LOG_ERR, m); end
-			def fatal(m); log_nopc(Syslog::LOG_EMERG, m); end
+      #
+      # syslog(3) says:
+      #
+      # LOG_EMERG means "system is unusable"
+      # LOG_ERR   means "error conditions"
+      #
+      # Errors might be fatal to Byteback, but they're unlikely to make the
+      # whole server unusable.  So lets dial this down to ERR from EMERG.
+      #
+			def fatal(m); log_nopc(Syslog::LOG_ERR, m); end
 
 			def log_nopc(level, m)
 				Syslog.log(level, m.gsub("%","%%"))
