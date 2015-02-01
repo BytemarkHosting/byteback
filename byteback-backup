@@ -190,8 +190,7 @@ def rsync(*sources)
   # given filesystem, daily backups (with this tool) are out of the question.
   #
   args = %w( rsync --archive --numeric-ids --delete-delay --inplace --relative --timeout 43200 )
-  args += [ "--xattrs", "--hard-links", "--acls" ]
-  args += [ "--rsync-path", "rsync --fake-super"]
+
   args += [ "--rsh", "ssh -o BatchMode=yes -x -a -i #{@ssh_key} -l #{@destination_user}"]
   args << "--verbose" if @verbose
   args += @excludes.map { |x| ["--exclude", x] }.flatten
@@ -209,6 +208,15 @@ def rsync(*sources)
   if File.exists?("/etc/byteback/rsync_filter")
       args += ["--filter", "merge /etc/byteback/rsync_filter"]
   end
+
+  #
+  # To add extra rsync flags, a file can be used.  This can have flags all on one line, or one per line.
+  #
+  if File.exists?("/etc/byteback/rsync_flags")
+    args += File.readlines("/etc/byteback/rsync_flags").map(&:chomp)
+  end
+
+  args += [ "--rsync-path", "rsync --fake-super"]
 
   args += sources
   args << @destination
