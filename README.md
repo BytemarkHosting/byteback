@@ -84,6 +84,15 @@ starts with an exclamation mark, which resets everything.  If you do this,
 you'll need to specify /proc, /sys, etc manually.  See the rsync manpage for
 more information about filters.
 
+It is also possible to add extra rsync flags to the configuration.  The
+following flags are always set:
+
+  --archive --numeric-ids --delete-delay --inplace --relative --timeout 43200
+
+If you wish to add to that (e.g. --xattrs --acl --hard-links) then simply add
+them to /etc/byteback/rsync_flags.  These extra flags get appended after the
+default flags above, so they take precedence.
+
 When the backup has completed successfully, the server will take a snapshot
 so that the client can't alter the backups, and then "prune" the backup 
 snapshots to ensure that the next backup is likely to run OK.
@@ -100,7 +109,7 @@ Backups can be viewed on the server filesystem, although the permissions will
 be wrong.  The rsync "fake-super" flag is used to store the permissions in a
 user attribute list.  To view this list on the server, run 
 
-  getfaddr -d  $filename
+  getfattr -d  $filename
 
 This command is part of the "attr" package in Debian.
 
@@ -140,8 +149,8 @@ need pruning, i.e. old backups must be deleted to make way for newer ones.
 
 There is a program on the server called byteback-prune which deals with this
 operation.  It deletes old backups until a certain amount of free space is
-achieved, which is currently determined to be the average size of the last 
-10 backups, plus 50%.
+achieved, which is currently fixed at 10% free.  This can be changed by setting
+the --maxpercent option.
 
 It can choose which backups to delete by one of two methods:
 
@@ -149,17 +158,24 @@ It can choose which backups to delete by one of two methods:
 
 2) the 'importance' method tries to retain a more spread-out backup pattern
 by "scoring" each backup according to how close it is to a set of "target 
-times".  These are 0, 1, 2, 3, 7, 14, 21, 28, 56, and 112 days.  So when you
-ask the pruner to run, the backup closest to the present time will be the 
-last one to be deleted.  The backup closes to "1 day ago" will be the second-last,
-and so on.  We score every backup in this way until we end up with a "least
-important" snapshot to delete.
+times".  These are:
+
+ * midday today;
+ * midday on the previous 6 days;
+ * midday on the previous 4 Sundays;
+ * midday on every 4th Sunday before that.
+
+So when you ask the pruner to run, the backup closest to the present time will
+be the last one to be deleted.  The backup closes to "1 day ago" will be the
+second-last, and so on.  We score every backup in this way until we end up with
+a "least important" snapshot to delete.
 
 The upshot of the second strategy should be that we retain closely-spaced
 daily backups, but as they get too numerous, we make sure that we are reluctant
 to delete our very oldest.
 
-[TODO: model it]
+The "4th Sunday" is calculated as every 4th Sunday in the Unix epoch, i.e.
+every fourth Sunday since Sunday 4th Jan 1970. 
 
 Acknowledgements
 ----------------
