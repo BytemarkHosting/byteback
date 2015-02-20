@@ -43,6 +43,8 @@ for your discs:
 	mkfs.btrfs /dev/my_volume_group/byteback
 	echo '/dev/my_volume_group/byteback /byteback btrfs compress 0 0' >>/etc/fstab
 	mount /byteback
+	chown byteback /byteback
+	chmod u+w /byteback
 
 Finally, before setting up the client, add 
 
@@ -56,13 +58,13 @@ Clients are machines that need to be backed up.  Assuming you can log into
 the remote 'byteback' user with a password or administrative key, you only
 need to type one command on the client to set things going:
 
-	byteback-setup-client --destination byteback@mybackuphost.net:
+	sudo byteback-setup-client --destination byteback@mybackuphost.net:
 
 If this goes OK, you are ready to start backing up.  I'd advise taking the
 first backup manually to make sure it goes as you expect.  Type this on the
 client to start and watch the backup.
 
-	byteback-backup --verbose
+	sudo byteback-backup --verbose
 
 Configuring byteback-backup
 ---------------------------
