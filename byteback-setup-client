@@ -1,6 +1,8 @@
 #!/usr/bin/ruby
 #
 # Run on a client machine to set up backups for the first time
+#
+
 
 $LOAD_PATH.unshift("/usr/lib/byteback")
 

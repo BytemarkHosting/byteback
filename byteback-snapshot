@@ -2,6 +2,7 @@
 #
 # Program to create a snapshot and/or rotate a directory of backup snapshots
 # using btrfs subvolume commands.
+#
 
 $LOAD_PATH.unshift("/usr/lib/byteback")
 
@@ -38,5 +39,4 @@ end
 
 info "Making new snapshot"
 @backups.new_snapshot!
-
 info "Finished"

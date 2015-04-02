@@ -1,6 +1,7 @@
 #!/usr/bin/ruby
 #
 # Called by byteback-setup-client to set up a new byteback-setup-client
+#
 
 $LOAD_PATH.unshift("/usr/lib/byteback")
 

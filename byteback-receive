@@ -2,8 +2,7 @@
 #
 # Program to receive backups and run rsync in receive mode.  Must check that
 # user as authorised by SSH is allowed to access particular directory.
-
-#STDERR.print ARGV.inspect + "\n"
+#
 
 $LOAD_PATH.unshift("/usr/lib/byteback")
 
@@ -11,13 +10,10 @@ require 'trollop'
 require 'byteback'
 include Byteback::Log
 
-#debug "ARGV=#{ARGV.inspect}\nSSH_ORIGINAL_COMMAND=#{ENV['SSH_ORIGINAL_COMMAND']}\n"
 
 if ENV['SSH_ORIGINAL_COMMAND']
 	ARGV.concat(ENV['SSH_ORIGINAL_COMMAND'].split(" "))
 end
-
-#STDERR.print "after ARGV=#{ARGV.inspect}\n"
 
 byteback_host = ENV['BYTEBACK_HOST']
 fatal("BYTEBACK_HOST environment not set") unless byteback_host
@@ -25,7 +21,8 @@ fatal("BYTEBACK_HOST environment not set") unless byteback_host
 byteback_root = ENV['HOME'] + "/" + ENV["BYTEBACK_HOST"]
 fatal("#{byteback_root} does not exist") unless File.directory?(byteback_root)
 
-# force destination to be where we expect
+#
+# force the destination to be where we expect
 #
 if ARGV[0] == 'rsync'
 	ARGV[-1] = "#{byteback_root}/current"

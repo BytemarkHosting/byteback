@@ -1,6 +1,8 @@
 #!/usr/bin/ruby
 #
-# Program to prune a byteback installation
+# Program to free up space on the backup-storage volume, by removing
+# backups (whether by age, or importance).
+#
 
 $LOAD_PATH.unshift("/usr/lib/byteback")
 
