@@ -1,8 +1,9 @@
 #!/usr/bin/ruby
 #
-# Program to prune a byteback installation 
+# Program to prune a byteback installation
 
 $LOAD_PATH.unshift("/usr/lib/byteback")
+
 require 'trollop'
 require 'byteback'
 require 'sys/filesystem'
@@ -46,8 +47,8 @@ end
 
 @do_prune = true if @do_prune_force
 
-fatal("Must specify one of --prune or --list") unless 
-  (@do_prune || @do_list) && 
+fatal("Must specify one of --prune or --list") unless
+  (@do_prune || @do_list) &&
   !(@do_prune && @do_list)
 
 fatal("Must specify --order as 'age' or 'importance'") unless
@@ -64,7 +65,7 @@ begin
 	@df_history.new_reading!
 rescue Errno::ENOSPC
 	if @do_list
-		warn("Couldn't write disk history file due to lack of space, ignoring")		
+		warn("Couldn't write disk history file due to lack of space, ignoring")
 	else
 		warn("Couldn't write disk history file due to lack of space, going to --prune-force")
 		@do_prune = @do_prune_force = true
@@ -85,10 +86,10 @@ if @do_prune_force
 	info("Forcing prune")
 elsif @free <= @minpercent && !File.exists?(PRUNING_FLAG)
 	info("Starting prune #{@free}% -> #{@maxpercent} free")
-	File.write(PRUNING_FLAG,"") 
+	File.write(PRUNING_FLAG,"")
 elsif @free >= @maxpercent && File.exists?(PRUNING_FLAG)
 	info("Stopping prune, reached #{@free}% free")
-	File.unlink(PRUNING_FLAG) 
+	File.unlink(PRUNING_FLAG)
 elsif File.exists?(PRUNING_FLAG)
 	info("Continuing prune #{@free}% -> #{@maxpercent}, gradient = #{gradient_30m}")
 end
@@ -124,7 +125,7 @@ if !@do_prune_force
     end
 end
 
-exit 0 unless 
+exit 0 unless
   (@do_prune && File.exists?(PRUNING_FLAG)) ||
   @do_prune_force
 

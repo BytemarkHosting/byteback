@@ -1,9 +1,10 @@
 #!/usr/bin/ruby
 #
-# Program to create a snapshot and/or rotate a directory of backup snapshots 
+# Program to create a snapshot and/or rotate a directory of backup snapshots
 # using btrfs subvolume commands.
 
 $LOAD_PATH.unshift("/usr/lib/byteback")
+
 require 'trollop'
 require 'byteback'
 include Byteback
@@ -30,12 +31,12 @@ snapshots = @backups.snapshots
 
 if !snapshots.empty?
 	last_snapshot_time = snapshots.last.time
-	fatal("Last snapshot was less than six hours ago") unless 
-		!last_snapshot_time || 
+	fatal("Last snapshot was less than six hours ago") unless
+		!last_snapshot_time ||
 		Time.now - last_snapshot_time >= 6*60*60 # FIXME: make configurable
 end
 
 info "Making new snapshot"
-@backups.new_snapshot! 
+@backups.new_snapshot!
 
 info "Finished"

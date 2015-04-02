@@ -9,6 +9,7 @@
 require 'resolv'
 
 $LOAD_PATH.unshift("/usr/lib/byteback")
+
 require 'trollop'
 require 'byteback/util'
 require 'byteback/log'
@@ -30,7 +31,7 @@ opts = Trollop::options do
       :default => ["/"]
 
   opt :exclude, "Paths to exclude",
-      :type => :strings, 
+      :type => :strings,
       :short => "x"
 
   opt :verbose, "Show debugging messages"
@@ -98,23 +99,23 @@ fatal("No sources specified") if @sources.empty?
 end
 
 # Automatically exclude anything mounted on a non-local filesystem, plus
-# various cache and temporary directories common on Bytemark & Debian 
+# various cache and temporary directories common on Bytemark & Debian
 # systems
 #
 if @excludes.nil?
 
-  PROBABLY_LOCAL = %w( 
-    btrfs 
-    ext2 
-    ext3 
-    ext4 
-    reiserfs 
-    xfs 
-    nilfs 
-    jfs 
-    reiser4 
-    zfs 
-    rootfs 
+  PROBABLY_LOCAL = %w(
+    btrfs
+    ext2
+    ext3
+    ext4
+    reiserfs
+    xfs
+    nilfs
+    jfs
+    reiser4
+    zfs
+    rootfs
   )
 
   COMMON_JUNK = %w(
@@ -133,7 +134,7 @@ if @excludes.nil?
     Hash[MOUNT_HEADINGS.zip(line.split(" "))]
   end
 
-  @excludes = 
+  @excludes =
 
     mounts.
       select { |m| !PROBABLY_LOCAL.include?(m[:vfstype]) }.
@@ -186,7 +187,7 @@ def rsync(*sources)
   # The timeout is set to 12 hours - rsync can spend a long time at the
   # far end checking over its files at the far end without transfer, so we
   # want to wait as long as possible without jeopardising the timing of the
-  # next backup run.  Obviously if rsync itself takes nearly 24 hours for a 
+  # next backup run.  Obviously if rsync itself takes nearly 24 hours for a
   # given filesystem, daily backups (with this tool) are out of the question.
   #
   args = %w( rsync --archive --numeric-ids --delete-delay --inplace --relative --timeout 43200 )
@@ -237,7 +238,7 @@ RSYNC_EXIT_STATUSES_TO_RETRY_ON = [10,11,20,21,22,23,30]
 loop do
   status = rsync(*@sources)
 
-  if RSYNC_EXIT_STATUSES_TO_ACCEPT.any?{|s| s === status} 
+  if RSYNC_EXIT_STATUSES_TO_ACCEPT.any?{|s| s === status}
     break
   elsif RSYNC_EXIT_STATUSES_TO_RETRY_ON.any?{|s| s === status}
 

@@ -2,7 +2,8 @@
 #
 # Called by byteback-setup-client to set up a new byteback-setup-client
 
-$: << '/usr/lib/byteback'
+$LOAD_PATH.unshift("/usr/lib/byteback")
+
 require 'fileutils'
 require 'trollop'
 require 'byteback/util'
@@ -19,7 +20,7 @@ end
 @pubkey = ARGV.join(" ")
 
 error("You must call this from byteback-setup-client on remote host") unless
-  @hostname && 
+  @hostname &&
   /^ssh/.match(@pubkey) &&
   ENV['SSH_CONNECTION']
 
@@ -29,15 +30,15 @@ Dir.chdir(ENV['HOME']) # don't know why we wouldn't be here
 
 FileUtils.mkdir_p(@hostname)
 
-error("Couldn't create btrfs subvolume") unless 
+error("Couldn't create btrfs subvolume") unless
 	system("/sbin/btrfs subvolume create #{@hostname}/current")
 
 FileUtils.mkdir_p(".ssh")
 
-if File.exists?(".ssh/authorized_keys") && 
+if File.exists?(".ssh/authorized_keys") &&
 	File.read(".ssh/authorized_keys").match(@pubkey.split(/\s+/)[1])
 
-	warn("This key already exists in .ssh/authorized_keys on server, nothing to do!") 
+	warn("This key already exists in .ssh/authorized_keys on server, nothing to do!")
 
 else
 

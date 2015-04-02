@@ -5,7 +5,8 @@
 
 #STDERR.print ARGV.inspect + "\n"
 
-$LOAD_PATH << '/usr/lib/byteback'
+$LOAD_PATH.unshift("/usr/lib/byteback")
+
 require 'trollop'
 require 'byteback'
 include Byteback::Log
@@ -49,4 +50,3 @@ else
 	STDERR.print "byteback-receive failed\n"
 	exit 9
 end
-

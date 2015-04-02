@@ -2,7 +2,8 @@
 #
 # Run on a client machine to set up backups for the first time
 
-$: << '/usr/lib/byteback'
+$LOAD_PATH.unshift("/usr/lib/byteback")
+
 require 'fileutils'
 require 'trollop'
 require 'byteback/util'
@@ -24,7 +25,7 @@ opts = Trollop::options do
 	opt :hostname, "Set host name for backups",
 	  :type => :string
 
-	opt :destination, "Backup destination (i.e. user@host:/path)", 
+	opt :destination, "Backup destination (i.e. user@host:/path)",
 	  :type => :string
 
 end
@@ -32,7 +33,7 @@ end
 @destination = opts[:destination]
 @hostname = opts[:hostname]
 
-_dummy, @destination_user, @destination_host, colon, @destination_path = 
+_dummy, @destination_user, @destination_host, colon, @destination_path =
   /^(.*)?(?:@)([^:]+)(:)(.*)?$/.match(@destination).to_a
 
 @destination_user ||= 'byteback'
@@ -50,7 +51,7 @@ if File.readable?("/etc/byteback/key")
 	warn "Skipping key generation, delete /etc/byteback/key if that's wrong"
 else
 
-	error "Couldn't generate SSH key" unless 
+	error "Couldn't generate SSH key" unless
 		system <<-KEYGEN
 			ssh-keygen -q -t rsa -C "byteback client key" \
 			-N "" -f /etc/byteback/key
@@ -63,7 +64,7 @@ key_pub = File.read("/etc/byteback/key.pub").chomp
 error "Remote setup didn't work" unless
   system("ssh -i /etc/byteback/key -l #{@destination_user} #{@destination_host} byteback-setup-client-receive #{@hostname} #{key_pub}")
 
-File.open("/etc/byteback/destination", "w") do |f| 
+File.open("/etc/byteback/destination", "w") do |f|
 	f.print "#{@destination_user}@#{@destination_host}:#{@destination_path}"
 end
 
