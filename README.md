@@ -41,7 +41,7 @@ for your discs:
 	#
 	lvcreate my_volume_group --name byteback --size 1000GB
 	mkfs.btrfs /dev/my_volume_group/byteback
-	echo '/dev/my_volume_group/byteback /byteback btrfs compress 0 0' >>/etc/fstab
+	echo '/dev/my_volume_group/byteback /byteback btrfs noatime,space_cache,compress=lzo,clear_cache,autodefrag,user_subvol_rm_allowed 0 0' >>/etc/fstab
 	mount /byteback
 	chown byteback /byteback
 	chmod u+w /byteback
