@@ -24,21 +24,21 @@ fatal("#{byteback_root} does not exist") unless File.directory?(byteback_root)
 #  Force restores to be limited to the hostname we're connecting form
 #
 if ( ARGV[0] == 'restore' )
-     ARGV[0] = 'rsync'
-     a = []
-     ARGV.each do |tmp|
-        if ( tmp =~ /^\/(.*)/ )
-           tmp = "#{byteback_host}/#{$1.dup}"
-        end
-        a.push(tmp)
-     end
-     exec(*a)
-eslif ARGV[0] == 'rsync'
-        ARGV[-1] = "#{byteback_root}/current"
+  ARGV[0] = 'rsync'
+  a = []
+  ARGV.each do |tmp|
+    if ( tmp =~ /^\/(.*)/ )
+      tmp = "#{byteback_host}/#{$1.dup}"
+    end
+    a.push(tmp)
+  end
+  exec(*a)
+elsif ARGV[0] == 'rsync'
+  ARGV[-1] = "#{byteback_root}/current"
   exec(*ARGV)
 elsif ARGV[0] == 'byteback-snapshot'
-	ARGV.concat(["--root", "#{byteback_root}"])
-	exec(*ARGV)
+  ARGV.concat(["--root", "#{byteback_root}"])
+  exec(*ARGV)
 end
 
 opts = Trollop::options do
