@@ -31,8 +31,7 @@ def ssh(*ssh_args)
           '-l', @destination_user,
           @destination_host
          ] +
-         ssh_args
-         .map { |a| a ? a : '' }
+         ssh_args.map { |a| a ? a : '' }
 
   system(*args)
 end
@@ -65,18 +64,18 @@ opts = Trollop.options do
   banner "byteback-restore: Restore a file\n "
 
   opt :file, 'The file to restore/list.',
-      type: :string
+      :type => :string
 
   opt :revision, "The version of the file to restore.",
-      type: :string
+      :type => :string
 
   opt :destination, 'Backup destination (i.e. user@host:/path).',
-      type: :string
+      :type => :string
 
   opt :ssh_key, 'SSH key filename',
-      type: :string,
-      default: '/etc/byteback/key',
-      short: 'k'
+      :type => :string,
+      :default => '/etc/byteback/key',
+      :short => 'k'
 end
 
 #

@@ -13,7 +13,7 @@ include Byteback::Log
 
 opts = Trollop.options do
   opt :root, 'Backups directory (must be a btrfs subvolume)',
-      type: :string
+      :type => :string
 
   opt :snapshot, '(ignored for compatibility)'
 
