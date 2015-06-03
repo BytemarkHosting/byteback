@@ -4,7 +4,7 @@
 # backups (whether by age, or importance).
 #
 
-$LOAD_PATH.unshift("/usr/lib/byteback")
+$LOAD_PATH.unshift('/usr/lib/byteback')
 
 require 'trollop'
 require 'byteback'
@@ -13,30 +13,28 @@ include Byteback
 include Byteback::Log
 include Byteback::Util
 
-opts = Trollop::options do
+opts = Trollop.options do
+  banner "Prune old backup directories to ensure there's enough space"
 
-    banner "Prune old backup directories to ensure there's enough space"
+  opt :minpercent, 'Start prune when disk has less than this %age free',
+      type: :integer,
+      default: 5
 
-    opt :minpercent, "Start prune when disk has less than this %age free",
-        :type => :integer,
-        :default => 5
+  opt :maxpercent, 'Stop prune when disk has more than this %age free',
+      type: :integer,
+      default: 10
 
-    opt :maxpercent, "Stop prune when disk has more than this %age free",
-        :type => :integer,
-        :default => 10
+  opt :list, 'List backups in pruning order, no other action'
 
-    opt :list, "List backups in pruning order, no other action"
+  opt :prune, 'Prune the next backup if necessary'
 
-    opt :prune, "Prune the next backup if necessary"
+  opt :prune_force, 'Prune the next backup regardless'
 
-    opt :prune_force, "Prune the next backup regardless"
+  opt :order, "Order backups by 'age' or 'importance'",
+      type: :string,
+      default: 'importance'
 
-    opt :order, "Order backups by 'age' or 'importance'",
-    	:type => :string,
-    	:default => "importance"
-
-    opt :verbose, "Show debugging messages"
-
+  opt :verbose, 'Show debugging messages'
 end
 
 @order = opts[:order]
@@ -49,7 +47,7 @@ end
 
 @do_prune = true if @do_prune_force
 
-fatal("Must specify one of --prune or --list") unless
+fatal('Must specify one of --prune or --list') unless
   (@do_prune || @do_list) &&
   !(@do_prune && @do_list)
 
@@ -57,24 +55,24 @@ fatal("Must specify --order as 'age' or 'importance'") unless
   @order == 'age' || @order == 'importance'
 
 if BackupDirectory.all.empty?
-	fatal("No backup directories found, need to run byteback-snapshot")
+  fatal('No backup directories found, need to run byteback-snapshot')
 end
 
-lock_out_other_processes("byteback-prune")
+lock_out_other_processes('byteback-prune')
 
 @df_history = DiskFreeHistory.new(ENV['HOME'])
 begin
-	@df_history.new_reading!
+  @df_history.new_reading!
 rescue Errno::ENOSPC
-	if @do_list
-		warn("Couldn't write disk history file due to lack of space, ignoring")
-	else
-		warn("Couldn't write disk history file due to lack of space, going to --prune-force")
-		@do_prune = @do_prune_force = true
-	end
+  if @do_list
+    warn("Couldn't write disk history file due to lack of space, ignoring")
+  else
+    warn("Couldn't write disk history file due to lack of space, going to --prune-force")
+    @do_prune = @do_prune_force = true
+  end
 rescue => anything_else
-	error("Couldn't record disk history of #{@df_history.mountpoint} in #{@df_history.history_file}, installation problem?")
-	raise
+  error("Couldn't record disk history of #{@df_history.mountpoint} in #{@df_history.history_file}, installation problem?")
+  raise
 end
 
 gradient_30m = @df_history.gradient(1800)
@@ -85,57 +83,57 @@ gradient_30m = @df_history.gradient(1800)
 PRUNING_FLAG = "#{ENV['HOME']}/.byteback.pruning"
 
 if @do_prune_force
-	info("Forcing prune")
-elsif @free <= @minpercent && !File.exists?(PRUNING_FLAG)
-	info("Starting prune #{@free}% -> #{@maxpercent} free")
-	File.write(PRUNING_FLAG,"")
-elsif @free >= @maxpercent && File.exists?(PRUNING_FLAG)
-	info("Stopping prune, reached #{@free}% free")
-	File.unlink(PRUNING_FLAG)
-elsif File.exists?(PRUNING_FLAG)
-	info("Continuing prune #{@free}% -> #{@maxpercent}, gradient = #{gradient_30m}")
+  info('Forcing prune')
+elsif @free <= @minpercent && !File.exist?(PRUNING_FLAG)
+  info("Starting prune #{@free}% -> #{@maxpercent} free")
+  File.write(PRUNING_FLAG, '')
+elsif @free >= @maxpercent && File.exist?(PRUNING_FLAG)
+  info("Stopping prune, reached #{@free}% free")
+  File.unlink(PRUNING_FLAG)
+elsif File.exist?(PRUNING_FLAG)
+  info("Continuing prune #{@free}% -> #{@maxpercent}, gradient = #{gradient_30m}")
 end
 
 debug("Disc free #{@free}%, 30m gradient = #{gradient_30m}")
 
 def snapshots_in_order
-	list = BackupDirectory.all_snapshots
-	if @order == 'importance'
-		Snapshot.sort_by_importance(list)
-	elsif @order == 'age'
-		list.sort.reverse
-	else
-		raise ArgumentError.new("Unknown snapshot sort method #{method}")
-	end
+  list = BackupDirectory.all_snapshots
+  if @order == 'importance'
+    Snapshot.sort_by_importance(list)
+  elsif @order == 'age'
+    list.sort.reverse
+  else
+    fail ArgumentError.new("Unknown snapshot sort method #{method}")
+  end
 end
 
 snapshots = snapshots_in_order
 
 if @do_list
-	print "Backups by #{@order}:\n"
-	snapshots.each_with_index do |snapshot, index|
-		print "#{sprintf('% 3d',index)}: #{snapshot.path}\n"
-	end
+  print "Backups by #{@order}:\n"
+  snapshots.each_with_index do |snapshot, index|
+    print "#{sprintf('% 3d', index)}: #{snapshot.path}\n"
+  end
 end
 
 # Don't do anything if we've not got two hours of readings
 #
-if !@do_prune_force
-    if @df_history.list.last.time - @df_history.list.first.time < 1800
-	    warn("Not enough disc space history to make a decision")
-	    exit 0
-    end
+unless @do_prune_force
+  if @df_history.list.last.time - @df_history.list.first.time < 1800
+    warn('Not enough disc space history to make a decision')
+    exit 0
+  end
 end
 
 exit 0 unless
-  (@do_prune && File.exists?(PRUNING_FLAG)) ||
+  (@do_prune && File.exist?(PRUNING_FLAG)) ||
   @do_prune_force
 
 exit 0 unless @do_prune_force || gradient_30m == 0
 
 if snapshots.empty?
-	error("No snapshots to delete, is there enough disc space?")
-	exit 1
+  error('No snapshots to delete, is there enough disc space?')
+  exit 1
 end
 
 info("Deleting #{snapshots.last.path}")

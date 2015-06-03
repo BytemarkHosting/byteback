@@ -9,26 +9,25 @@ require 'trollop'
 require 'byteback'
 include Byteback::Log
 
-
 if ENV['SSH_ORIGINAL_COMMAND']
-	ARGV.concat(ENV['SSH_ORIGINAL_COMMAND'].split(" "))
+  ARGV.concat(ENV['SSH_ORIGINAL_COMMAND'].split(' '))
 end
 
 byteback_host = ENV['BYTEBACK_HOST']
-fatal("BYTEBACK_HOST environment not set") unless byteback_host
+fatal('BYTEBACK_HOST environment not set') unless byteback_host
 
-byteback_root = ENV['HOME'] + "/" + ENV["BYTEBACK_HOST"]
+byteback_root = ENV['HOME'] + '/' + ENV['BYTEBACK_HOST']
 fatal("#{byteback_root} does not exist") unless File.directory?(byteback_root)
 
 #
 #  Force restores to be limited to the hostname we're connecting form
 #
-if ( ARGV[0] == 'restore' )
+if (ARGV[0] == 'restore')
   ARGV[0] = 'rsync'
   a = []
   ARGV.each do |tmp|
-    if ( tmp =~ /^\/(.*)/ )
-      tmp = "#{byteback_host}/#{$1.dup}"
+    if  tmp =~ /^\/(.*)/
+      tmp = "#{byteback_host}/#{Regexp.last_match(1).dup}"
     end
     a.push(tmp)
   end
@@ -37,27 +36,27 @@ elsif ARGV[0] == 'rsync'
   ARGV[-1] = "#{byteback_root}/current"
   exec(*ARGV)
 elsif ARGV[0] == 'byteback-snapshot'
-  ARGV.concat(["--root", "#{byteback_root}"])
+  ARGV.concat(['--root', "#{byteback_root}"])
   exec(*ARGV)
 end
 
-opts = Trollop::options do
-	opt :verbose, "Print diagnostics"
-	opt :ping, "Check connection parameters and exit"
-	opt :list, "Show backed up files matching the given pattern", :type => :string
-	opt :restore, "Perform a restoration operation", :type => :string
-	opt :complete, "Mark current backup as complete"
+opts = Trollop.options do
+  opt :verbose, 'Print diagnostics'
+  opt :ping, 'Check connection parameters and exit'
+  opt :list, 'Show backed up files matching the given pattern', type: :string
+  opt :restore, 'Perform a restoration operation', type: :string
+  opt :complete, 'Mark current backup as complete'
 end
 
-error("Please only choose one mode") if opts[:ping] && opts[:complete]
+error('Please only choose one mode') if opts[:ping] && opts[:complete]
 if opts[:complete]
-	system("byteback-snapshot", "--root", byteback_root)
+  system('byteback-snapshot', '--root', byteback_root)
 elsif opts[:list]
-	system( "cd #{byteback_root} && find . -print | grep #{opts[:list]}" )
-	exit(0 )
+  system("cd #{byteback_root} && find . -print | grep #{opts[:list]}")
+  exit(0)
 elsif opts[:ping]
-	exit 0
+  exit 0
 else
-	STDERR.print "byteback-receive failed\n"
-	exit 9
+  STDERR.print "byteback-receive failed\n"
+  exit 9
 end

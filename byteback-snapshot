@@ -4,39 +4,37 @@
 # using btrfs subvolume commands.
 #
 
-$LOAD_PATH.unshift("/usr/lib/byteback")
+$LOAD_PATH.unshift('/usr/lib/byteback')
 
 require 'trollop'
 require 'byteback'
 include Byteback
 include Byteback::Log
 
-opts = Trollop::options do
+opts = Trollop.options do
+  opt :root, 'Backups directory (must be a btrfs subvolume)',
+      type: :string
 
-    opt :root, "Backups directory (must be a btrfs subvolume)",
-    	:type => :string
+  opt :snapshot, '(ignored for compatibility)'
 
-    opt :snapshot, "(ignored for compatibility)"
-
-    opt :verbose, "Print diagnostics"
-
+  opt :verbose, 'Print diagnostics'
 end
 
 @root = opts[:root]
 @verbose = opts[:verbose]
 
-fatal("--root not readable") unless File.directory?("#{@root}")
+fatal('--root not readable') unless File.directory?("#{@root}")
 
 @backups = BackupDirectory.new(@root)
 snapshots = @backups.snapshots
 
-if !snapshots.empty?
-	last_snapshot_time = snapshots.last.time
-	fatal("Last snapshot was less than six hours ago") unless
-		!last_snapshot_time ||
-		Time.now - last_snapshot_time >= 6*60*60 # FIXME: make configurable
+unless snapshots.empty?
+  last_snapshot_time = snapshots.last.time
+  fatal('Last snapshot was less than six hours ago') unless
+    !last_snapshot_time ||
+    Time.now - last_snapshot_time >= 6 * 60 * 60 # FIXME: make configurable
 end
 
-info "Making new snapshot"
+info 'Making new snapshot'
 @backups.new_snapshot!
-info "Finished"
+info 'Finished'

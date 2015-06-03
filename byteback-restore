@@ -3,49 +3,43 @@
 # Restore a file from the most recent backup, from the remote host.
 #
 
-$LOAD_PATH.unshift("/usr/lib/byteback")
-$LOAD_PATH.unshift("./lib/")
+$LOAD_PATH.unshift('/usr/lib/byteback')
+$LOAD_PATH.unshift('./lib/')
 
 require 'trollop'
-
 
 #
 #  Show an error message and abort.
 #
-def fatal( str )
-  STDERR.puts( str )
+def fatal(str)
+  STDERR.puts(str)
   exit(1)
 end
-
-
 
 #
 #  Run a remote command.
 #
 def ssh(*ssh_args)
-  args = ["ssh",
-    "-o", "BatchMode=yes",
-    "-o", "ConnectionAttempts=5",
-    "-o", "ConnectTimeout=30",
-    "-o", "ServerAliveInterval=60",
-    "-o", "TCPKeepAlive=yes",
-    "-x", "-a",
-    "-i", @ssh_key,
-    "-l", @destination_user,
-    @destination_host
-  ] +
-  ssh_args.
-  map { |a| a ? a : "" }
+  args = ['ssh',
+          '-o', 'BatchMode=yes',
+          '-o', 'ConnectionAttempts=5',
+          '-o', 'ConnectTimeout=30',
+          '-o', 'ServerAliveInterval=60',
+          '-o', 'TCPKeepAlive=yes',
+          '-x', '-a',
+          '-i', @ssh_key,
+          '-l', @destination_user,
+          @destination_host
+         ] +
+         ssh_args
+         .map { |a| a ? a : '' }
 
   system(*args)
 end
 
-
-
-def list_files( pattern )
-  ssh("byteback-receive", "--list", pattern )
+def list_files(pattern)
+  ssh('byteback-receive', '--list', pattern)
 end
-
 
 #
 #  We cannot use plain 'rsync' here because the receiver command will
@@ -55,89 +49,77 @@ end
 # do that by setting "rsync-path" to point to the receiver program.
 #
 #
-def restore_file( path, revision )
+def restore_file(path, revision)
   cmd = %w( rsync )
-  cmd += [ "--rsh", "ssh -o BatchMode=yes -x -a -i /etc/byteback/key -l byteback" ]
-  cmd += [ "--rsync-path", "restore --fake-super" ]
-  cmd += [ "-aApzrX",  "--numeric-ids" ]
-  cmd += [ "#{@destination_host}:/#{revision}/#{path}", "." ]
+  cmd += ['--rsh', 'ssh -o BatchMode=yes -x -a -i /etc/byteback/key -l byteback']
+  cmd += ['--rsync-path', 'restore --fake-super']
+  cmd += ['-aApzrX',  '--numeric-ids']
+  cmd += ["#{@destination_host}:/#{revision}/#{path}", '.']
   system(*cmd)
-
 end
-
-
-
-
 
 #
 #  Parse our command-line arguments
 #
-opts = Trollop::options do
-
+opts = Trollop.options do
   banner "byteback-restore: Restore a file\n "
 
-  opt :file, "The file to restore",
-      :type => :string
+  opt :file, 'The file to restore',
+      type: :string
 
   opt :revision, "The version of the file to restore - default is 'latest'",
-      :type => :string
+      type: :string
 
-  opt :destination, "Backup destination (i.e. user@host:/path)",
-      :type => :string
+  opt :destination, 'Backup destination (i.e. user@host:/path)',
+      type: :string
 
-  opt :ssh_key, "SSH key filename",
-      :type => :string,
-      :default => "/etc/byteback/key",
-      :short => "k"
-
+  opt :ssh_key, 'SSH key filename',
+      type: :string,
+      default: '/etc/byteback/key',
+      short: 'k'
 end
-
-
 
 #
 #  Setup default destination and key.
 #
-@destination = File.read("/etc/byteback/destination").chomp if
-  File.exists?("/etc/byteback/destination")
-@ssh_key = "/etc/byteback/key" if File.exists?("/etc/byteback/key")
+@destination = File.read('/etc/byteback/destination').chomp if
+  File.exist?('/etc/byteback/destination')
+@ssh_key = '/etc/byteback/key' if File.exist?('/etc/byteback/key')
 
 #
 #  Allow the command-line to override them.
 #
-@ssh_key = opts[:ssh_key] unless( opts[:ssh_key].nil?)
-@destination = opts[:destination] unless ( opts[:destination].nil? )
-
+@ssh_key = opts[:ssh_key] unless  opts[:ssh_key].nil?
+@destination = opts[:destination] unless  opts[:destination].nil?
 
 #
 # Check our destination is well-formed
 #
 if @destination =~ /^(?:(.+)@)?([^@:]+):(.+)?$/
-  @destination_user, @destination_host, @destination_path = [$1, $2, $3]
+  @destination_user, @destination_host, @destination_path = [Regexp.last_match(1), Regexp.last_match(2), Regexp.last_match(3)]
 else
-  fatal("Destination must be a remote path, e.g. ssh@host.com:/store/backups")
+  fatal('Destination must be a remote path, e.g. ssh@host.com:/store/backups')
 end
-
 
 #
 #  If the user didn't specify a file then we're not restoring anything,
 # and we should abort.
 #
-if ( opts[:file].nil? )
-  fatal("You must specify a file to restore" )
+if  opts[:file].nil?
+  fatal('You must specify a file to restore')
 end
 
 #
 #  If the user specified a file, but not a revision, then we list
 # the available revisions.
 #
-if ( opts[:revision].nil? )
-  list_files( opts[:file] )
+if  opts[:revision].nil?
+  list_files(opts[:file])
   exit(0)
 end
-
 
 #
 #  Restore a file
 #
-restore_file( opts[:file], opts[:revision] )
+restore_file(opts[:file], opts[:revision])
 exit(0)
