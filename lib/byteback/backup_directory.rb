@@ -11,6 +11,8 @@ module Byteback
 			BACKUP_IMPORTANCE = [1, 2, 7, 14, 21, 28, 56, 112]
 
 			def sort_by_importance(snapshots_unsorted, now=Time.now)
+                return snapshots_unsorted if ( snapshots_unsorted.size < 1 )
+
         # 
         # Keep the last 7 days backups
         #
