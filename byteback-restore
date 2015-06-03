@@ -47,8 +47,21 @@ def list_files( pattern )
 end
 
 
+#
+#  We cannot use plain 'rsync' here because the receiver command will
+# see that, and rewrite our arguments.
+#
+#  To cater to this we have to wrap the rsync for the restore and we
+# do that by setting "rsync-path" to point to the receiver program.
+#
+#
 def restore_file( path, revision )
-  puts "Restoring revision #{revision} of file #{path}"
+  cmd = %w( rsync )
+  cmd += [ "--rsh", "ssh -o BatchMode=yes -x -a -i /etc/byteback/key -l byteback" ]
+  cmd += [ "--rsync-path", "restore" ]
+  cmd += [ "#{@destination_host}:/#{revision}/#{path}", "." ]
+  system(*cmd)
+
 end
 
 
