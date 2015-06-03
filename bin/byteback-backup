@@ -22,33 +22,33 @@ opts = Trollop.options do
   banner "#{ME}: Back up this system to a byteback-enabled server\n "
 
   opt :destination, 'Backup destination (i.e. user@host:/path)',
-      type: :string
+      :type => :string
 
   opt :source, 'Source paths',
-      type: :strings,
-      default: ['/']
+      :type => :strings,
+      :default => ['/']
 
   opt :exclude, 'Paths to exclude',
-      type: :strings,
-      short: 'x'
+      :type => :strings,
+      :short => 'x'
 
   opt :verbose, 'Show debugging messages'
 
   opt :retry_number, 'Number of retries on error',
-      type: :integer,
-      default: 3
+      :type => :integer,
+      :default => 3
 
   opt :retry_delay, 'Number of seconds between retries after an error',
-      type: :integer,
-      default: 300
+      :type => :integer,
+      :default => 300
 
   opt :ssh_key, 'SSH key filename',
-      type: :string,
-      default: '/etc/byteback/key',
-      short: 'k'
+      :type => :string,
+      :default => '/etc/byteback/key',
+      :short => 'k'
 
   opt :help, 'Show this message',
-      short: 'h'
+      :short => 'h'
 
   banner "\nAdditional excludes can be specified using /etc/byteback/rsync_filter, which is an rsync filter file.  See the rsync man page for information on how this works.\n"
 end
@@ -124,8 +124,7 @@ if @excludes.nil?
     /var/tmp
   )
 
-  MOUNT_HEADINGS = %w( spec file vfstype mntops freq passno )
-                   .map(&:to_sym)
+  MOUNT_HEADINGS = %w( spec file vfstype mntops freq passno ).map(&:to_sym)
 
   mounts = File.read('/proc/mounts').split("\n").map do |line|
     Hash[MOUNT_HEADINGS.zip(line.split(' '))]
@@ -133,11 +132,7 @@ if @excludes.nil?
 
   @excludes =
 
-    mounts
-    .select { |m| !PROBABLY_LOCAL.include?(m[:vfstype]) }
-    .map { |m| m[:file] } +
-
-    COMMON_JUNK.select { |f| File.exist?(f) }
+    mounts.select { |m| !PROBABLY_LOCAL.include?(m[:vfstype]) }.map { |m| m[:file] } + COMMON_JUNK.select { |f| File.exist?(f) }
 
 end
 
@@ -164,8 +159,7 @@ def ssh(*ssh_args)
           '-l', @destination_user,
           @destination_host
          ] +
-         ssh_args
-         .map { |a| a ? a : '' }
+         ssh_args.map { |a| a ? a : '' }
 
   log_system(*args)
 end
