@@ -304,9 +304,9 @@ module Sys
       # The filesystem type, e.g. UFS.
       attr_accessor :base_type
 
-      alias inodes files
-      alias inodes_free files_free
-      alias inodes_available files_available
+      alias_method :inodes, :files
+      alias_method :inodes_free, :files_free
+      alias_method :inodes_available, :files_available
 
       # Creates a new Sys::Filesystem::Stat object. This is meant for
       # internal use only. Do not instantiate directly.
@@ -371,11 +371,11 @@ module Sys
       # The pass number of the filessytem check. May be nil.
       attr_accessor :pass_number
 
-      alias fsname name
-      alias dir mount_point
-      alias opts options
-      alias passno pass_number
-      alias freq dump_frequency
+      alias_method :fsname, :name
+      alias_method :dir, :mount_point
+      alias_method :opts, :options
+      alias_method :passno, :pass_number
+      alias_method :freq, :dump_frequency
 
       # Creates a Sys::Filesystem::Mount object. This is meant for internal
       # use only. Do no instantiate directly.
@@ -398,7 +398,7 @@ module Sys
       fs = Statvfs.new
 
       if statvfs(path, fs) < 0
-        raise Error, 'statvfs() function failed: ' + strerror(FFI.errno)
+        fail Error, 'statvfs() function failed: ' + strerror(FFI.errno)
       end
 
       obj = Sys::Filesystem::Stat.new
@@ -449,22 +449,22 @@ module Sys
         num = getmntinfo(buf, 2)
 
         if num == 0
-          raise Error, 'getmntinfo() function failed: ' + strerror(FFI.errno)
+          fail Error, 'getmntinfo() function failed: ' + strerror(FFI.errno)
         end
 
         ptr = buf.get_pointer(0)
 
-        num.times{ |i|
+        num.times do |_i|
           mnt = Statfs.new(ptr)
           obj = Sys::Filesystem::Mount.new
           obj.name = mnt[:f_mntfromname].to_s
           obj.mount_point = mnt[:f_mntonname].to_s
           obj.mount_type = mnt[:f_fstypename].to_s
 
-          string = ""
+          string = ''
           flags = mnt[:f_flags] & MNT_VISFLAGMASK
 
-          @@opt_names.each{ |key,val|
+          @@opt_names.each do |key, val|
             if flags & key > 0
               if string.empty?
                 string << val
@@ -473,7 +473,7 @@ module Sys
               end
             end
             flags &= ~key
-          }
+          end
 
           obj.options = string
 
@@ -484,7 +484,7 @@ module Sys
           end
 
           ptr += Statfs.size
-        }
+        end
       else
         begin
           if respond_to?(:setmntent, true)
@@ -555,13 +555,13 @@ module Sys
       dev = File.stat(file).dev
       val = file
 
-      self.mounts.each{ |mnt|
+      mounts.each do |mnt|
         mp = mnt.mount_point
         if File.stat(mp).dev == dev
           val = mp
           break
         end
-      }
+      end
 
       val
     end
@@ -576,16 +576,16 @@ class Numeric
 
   # Converts a number to megabytes.
   def to_mb
-    self / 1048576
+    self / 1_048_576
   end
 
   # Converts a number to gigabytes.
   def to_gb
-    self / 1073741824
+    self / 1_073_741_824
   end
 
   # Converts a number to terabytes.
   def to_tb
-    self / 1099511627776
+    self / 1_099_511_627_776
   end
 end
