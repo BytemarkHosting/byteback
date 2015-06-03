@@ -58,7 +58,8 @@ end
 def restore_file( path, revision )
   cmd = %w( rsync )
   cmd += [ "--rsh", "ssh -o BatchMode=yes -x -a -i /etc/byteback/key -l byteback" ]
-  cmd += [ "--rsync-path", "restore" ]
+  cmd += [ "--rsync-path", "restore --fake-super" ]
+  cmd += [ "-aApzrX",  "--numeric-ids" ]
   cmd += [ "#{@destination_host}:/#{revision}/#{path}", "." ]
   system(*cmd)
 
