@@ -17,12 +17,12 @@ opts = Trollop.options do
   banner "Prune old backup directories to ensure there's enough space"
 
   opt :minpercent, 'Start prune when disk has less than this %age free',
-      type: :integer,
-      default: 5
+      :type => :integer,
+      :default => 5
 
   opt :maxpercent, 'Stop prune when disk has more than this %age free',
-      type: :integer,
-      default: 10
+      :type => :integer,
+      :default => 10
 
   opt :list, 'List backups in pruning order, no other action'
 
@@ -31,8 +31,8 @@ opts = Trollop.options do
   opt :prune_force, 'Prune the next backup regardless'
 
   opt :order, "Order backups by 'age' or 'importance'",
-      type: :string,
-      default: 'importance'
+      :type => :string,
+      :default => 'importance'
 
   opt :verbose, 'Show debugging messages'
 end

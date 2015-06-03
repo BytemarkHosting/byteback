@@ -43,8 +43,8 @@ end
 opts = Trollop.options do
   opt :verbose, 'Print diagnostics'
   opt :ping, 'Check connection parameters and exit'
-  opt :list, 'Show backed up files matching the given pattern', type: :string
-  opt :restore, 'Perform a restoration operation', type: :string
+  opt :list, 'Show backed up files matching the given pattern', :type => :string
+  opt :restore, 'Perform a restoration operation', :type => :string
   opt :complete, 'Mark current backup as complete'
 end
 
