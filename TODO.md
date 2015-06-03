@@ -1,8 +1,6 @@
 TODO list for byteback
 ======================
 
-* byteback-restore program
-
 * byteback-prune does not cope with the case where the mount point is not
     writeable (should print error explaining that)
 
