@@ -1,5 +1,3 @@
-#!/usr/bin/ruby
-
 require 'sys/filesystem'
 
 module Byteback
