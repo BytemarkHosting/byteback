@@ -115,13 +115,18 @@ user attribute list.  To view this list on the server, run
 
 This command is part of the "attr" package in Debian.
 
-To restore a file to the current directory, you need to run:
+To restore a file you may use the `byteback-restore` command, which allows you to find all files matching a pattern via a command-like:
 
-  rsync -Prat --rsync-path='rsync --fake-super' byteback@mybackuphost.net:path/to/file .
+    byteback-restore --file /etc/passwd
 
-The --fake-super flag only applies to the "local" end, hence the need to specfy
-the rsync-path.  You'll need to set up correct SSH permissions at the remote
-end for this to work.
+To actually restore the file, to the current directory, run:
+
+    byteback-restore --file /etc/passwd --revision=current
+
+Recursive restorations are supported too:
+
+    byteback-restore --file /srv --revision=current
+
 
 The trust model
 ---------------
