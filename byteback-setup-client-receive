@@ -3,7 +3,7 @@
 # Called by byteback-setup-client to set up a new byteback-setup-client
 #
 
-$LOAD_PATH.unshift("/usr/lib/byteback")
+$LOAD_PATH.unshift('/usr/lib/byteback')
 
 require 'fileutils'
 require 'trollop'
@@ -13,42 +13,42 @@ include Byteback::Util
 include Byteback::Log
 
 def error(message)
-	STDERR.print "*** #{message}\n"
-	exit 1
+  STDERR.print "*** #{message}\n"
+  exit 1
 end
 
 @hostname = ARGV.shift
-@pubkey = ARGV.join(" ")
+@pubkey = ARGV.join(' ')
 
-error("You must call this from byteback-setup-client on remote host") unless
+error('You must call this from byteback-setup-client on remote host') unless
   @hostname &&
   /^ssh/.match(@pubkey) &&
   ENV['SSH_CONNECTION']
 
-@client_ip = ENV['SSH_CONNECTION'].split(" ").first
+@client_ip = ENV['SSH_CONNECTION'].split(' ').first
 
 Dir.chdir(ENV['HOME']) # don't know why we wouldn't be here
 
 FileUtils.mkdir_p(@hostname)
 
 error("Couldn't create btrfs subvolume") unless
-	system("/sbin/btrfs subvolume create #{@hostname}/current")
+  system("/sbin/btrfs subvolume create #{@hostname}/current")
 
-FileUtils.mkdir_p(".ssh")
+FileUtils.mkdir_p('.ssh')
 
-if File.exists?(".ssh/authorized_keys") &&
-	File.read(".ssh/authorized_keys").match(@pubkey.split(/\s+/)[1])
+if File.exist?('.ssh/authorized_keys') &&
+   File.read('.ssh/authorized_keys').match(@pubkey.split(/\s+/)[1])
 
-	warn("This key already exists in .ssh/authorized_keys on server, nothing to do!")
+  warn('This key already exists in .ssh/authorized_keys on server, nothing to do!')
 
 else
 
-	File.open(".ssh/authorized_keys", "a+") do |fh|
-		fh.print <<-LINE.gsub(/\n/,"") + "\n"
+  File.open('.ssh/authorized_keys', 'a+') do |fh|
+    fh.print <<-LINE.gsub(/\n/, '') + "\n"
 command="byteback-receive",
 from="#{@client_ip}",
 environment="BYTEBACK_HOST=#{@hostname}"
  #{@pubkey}
-		LINE
-	end
+    LINE
+  end
 end

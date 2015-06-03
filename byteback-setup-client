@@ -3,8 +3,7 @@
 # Run on a client machine to set up backups for the first time
 #
 
-
-$LOAD_PATH.unshift("/usr/lib/byteback")
+$LOAD_PATH.unshift('/usr/lib/byteback')
 
 require 'fileutils'
 require 'trollop'
@@ -14,60 +13,58 @@ include Byteback::Util
 include Byteback::Log
 
 def error(message)
-	STDERR.print "*** #{message}\n"
-	exit 1
+  STDERR.print "*** #{message}\n"
+  exit 1
 end
 
 def verbose(message)
-	print "#{message}\n"
+  print "#{message}\n"
 end
 
-opts = Trollop::options do
+opts = Trollop.options do
+  opt :hostname, 'Set host name for backups',
+      type: :string
 
-	opt :hostname, "Set host name for backups",
-	  :type => :string
-
-	opt :destination, "Backup destination (i.e. user@host:/path)",
-	  :type => :string
-
+  opt :destination, 'Backup destination (i.e. user@host:/path)',
+      type: :string
 end
 
 @destination = opts[:destination]
 @hostname = opts[:hostname]
 
 _dummy, @destination_user, @destination_host, colon, @destination_path =
-  /^(.*)?(?:@)([^:]+)(:)(.*)?$/.match(@destination).to_a
+                                                     /^(.*)?(?:@)([^:]+)(:)(.*)?$/.match(@destination).to_a
 
 @destination_user ||= 'byteback'
 @destination_path ||= ''
 @destination_host ||= @destination
 
-if !@hostname
-	@hostname = `hostname -f`.chomp
-	warn "No hostname set, using #{@hostname}\n"
+unless @hostname
+  @hostname = `hostname -f`.chomp
+  warn "No hostname set, using #{@hostname}\n"
 end
 
-FileUtils.mkdir_p("/etc/byteback")
+FileUtils.mkdir_p('/etc/byteback')
 
-if File.readable?("/etc/byteback/key")
-	warn "Skipping key generation, delete /etc/byteback/key if that's wrong"
+if File.readable?('/etc/byteback/key')
+  warn "Skipping key generation, delete /etc/byteback/key if that's wrong"
 else
 
-	error "Couldn't generate SSH key" unless
-		system <<-KEYGEN
-			ssh-keygen -q -t rsa -C "byteback client key" \
-			-N "" -f /etc/byteback/key
-		KEYGEN
+  error "Couldn't generate SSH key" unless
+    system <<-KEYGEN
+      ssh-keygen -q -t rsa -C "byteback client key" \
+      -N "" -f /etc/byteback/key
+    KEYGEN
 
 end
 
-key_pub = File.read("/etc/byteback/key.pub").chomp
+key_pub = File.read('/etc/byteback/key.pub').chomp
 
 error "Remote setup didn't work" unless
   system("ssh -i /etc/byteback/key -l #{@destination_user} #{@destination_host} byteback-setup-client-receive #{@hostname} #{key_pub}")
 
-File.open("/etc/byteback/destination", "w") do |f|
-	f.print "#{@destination_user}@#{@destination_host}:#{@destination_path}"
+File.open('/etc/byteback/destination', 'w') do |f|
+  f.print "#{@destination_user}@#{@destination_host}:#{@destination_path}"
 end
 
 print "Setup worked!  To take your first backup run: byteback-backup --verbose\n"
