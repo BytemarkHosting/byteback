@@ -2,14 +2,13 @@
 #
 # Program to receive backups and run rsync in receive mode.  Must check that
 # user as authorised by SSH is allowed to access particular directory.
-#
 
-$LOAD_PATH.unshift("/usr/lib/byteback")
+#STDERR.print ARGV.inspect + "\n"
 
+$LOAD_PATH << '/usr/lib/byteback'
 require 'trollop'
 require 'byteback'
 include Byteback::Log
-
 
 if ENV['SSH_ORIGINAL_COMMAND']
 	ARGV.concat(ENV['SSH_ORIGINAL_COMMAND'].split(" "))
@@ -21,8 +20,7 @@ fatal("BYTEBACK_HOST environment not set") unless byteback_host
 byteback_root = ENV['HOME'] + "/" + ENV["BYTEBACK_HOST"]
 fatal("#{byteback_root} does not exist") unless File.directory?(byteback_root)
 
-#
-# force the destination to be where we expect
+# force destination to be where we expect
 #
 if ARGV[0] == 'rsync'
 	ARGV[-1] = "#{byteback_root}/current"
@@ -35,12 +33,16 @@ end
 opts = Trollop::options do
 	opt :verbose, "Print diagnostics"
 	opt :ping, "Check connection parameters and exit"
+	opt :list, "Show backed up files matching the given pattern", :type => :string
 	opt :complete, "Mark current backup as complete"
 end
 
 error("Please only choose one mode") if opts[:ping] && opts[:complete]
 if opts[:complete]
 	system("byteback-snapshot", "--root", byteback_root)
+elsif opts[:list]
+	system( "find #{byteback_root} -print | grep #{opts[:list]}" )
+	exit(0 )
 elsif opts[:ping]
 	exit 0
 else
