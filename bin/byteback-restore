@@ -42,11 +42,11 @@ def list_files(pattern)
 end
 
 #
-#  We cannot use plain 'rsync' here because the receiver command will
+#  We cannot use plain 'rsync' here because the receiving-command will
 # see that, and rewrite our arguments.
 #
 #  To cater to this we have to wrap the rsync for the restore and we
-# do that by setting "rsync-path" to point to the receiver program.
+# do that by setting "rsync-path" to point to a faux script.
 #
 #
 def restore_file(path, revision)
@@ -64,13 +64,13 @@ end
 opts = Trollop.options do
   banner "byteback-restore: Restore a file\n "
 
-  opt :file, 'The file to restore',
+  opt :file, 'The file to restore/list.',
       type: :string
 
-  opt :revision, "The version of the file to restore - default is 'latest'",
+  opt :revision, "The version of the file to restore.",
       type: :string
 
-  opt :destination, 'Backup destination (i.e. user@host:/path)',
+  opt :destination, 'Backup destination (i.e. user@host:/path).',
       type: :string
 
   opt :ssh_key, 'SSH key filename',
@@ -105,15 +105,15 @@ end
 #  If the user didn't specify a file then we're not restoring anything,
 # and we should abort.
 #
-if  opts[:file].nil?
-  fatal('You must specify a file to restore')
+if opts[:file].nil?
+  fatal('You must specify a file to search/restore')
 end
 
 #
 #  If the user specified a file, but not a revision, then we list
 # the available revisions.
 #
-if  opts[:revision].nil?
+if opts[:revision].nil?
   list_files(opts[:file])
   exit(0)
 end
