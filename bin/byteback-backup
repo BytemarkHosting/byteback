@@ -175,13 +175,13 @@ def rsync(*sources)
   # at the end of the job, and rsync will do more work for big files without
   # it.
   #
-  # The timeout is set to 12 hours - rsync can spend a long time at the
+  # The timeout is set to 6 hours - rsync can spend a long time at the
   # far end checking over its files at the far end without transfer, so we
   # want to wait as long as possible without jeopardising the timing of the
   # next backup run.  Obviously if rsync itself takes nearly 24 hours for a
   # given filesystem, daily backups (with this tool) are out of the question.
   #
-  args = %w( rsync --archive --numeric-ids --delete-delay --inplace --relative --timeout 43200 )
+  args = %w( rsync --archive --numeric-ids --delete-delay --inplace --relative --timeout 21600 )
 
   args += ['--rsh', "ssh -o BatchMode=yes -x -a -i #{@ssh_key} -l #{@destination_user}"]
   args << '--verbose' if @verbose
