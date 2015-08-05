@@ -1,0 +1,21 @@
+#!/usr/bin/ruby
+#
+# Convert root-owned snapshots to being owned by the `byteback` user.
+#
+
+
+def s(*args)
+  #print c.join(" ") + "\n"
+  system(*args) || exit(1)
+end
+
+snapshots = `sudo btrfs subvolume list /store/backups`.split("\n").map { |n| n.split(" ")[8] }
+
+snapshots.each do |n|
+  d = "/store/backups/#{n}"
+  s "sudo -u byteback /sbin/btrfs subvolume snapshot #{d} #{d}-tmp"
+  s "sudo /sbin/btrfs subvolume delete #{d}"
+  s "sudo -u byteback /sbin/btrfs subvolume snapshot #{d}-tmp #{d}"
+  s "sudo -u byteback /sbin/btrfs subvolume delete #{d}-tmp"
+end
+
