@@ -2,6 +2,8 @@ require 'logger'
 require 'syslog'
 
 module Byteback
+
+  #
   # Translates Ruby's Logger calls to similar calls to Syslog
   # (implemented in Ruby 2.0 as Syslog::Logger).
   #
@@ -11,19 +13,20 @@ module Byteback
     class << self
       def debug(m)
         log_nopc(Syslog::LOG_DEBUG, m)
-   end
+      end
 
       def info(m)
         log_nopc(Syslog::LOG_INFO, m)
-   end
-
+      end
+      
       def warn(m)
         log_nopc(Syslog::LOG_WARNING, m)
-   end
-
+      end
+      
       def error(m)
         log_nopc(Syslog::LOG_ERR, m)
-   end
+      end
+      
       #
       # syslog(3) says:
       #
@@ -35,7 +38,7 @@ module Byteback
       #
       def fatal(m)
         log_nopc(Syslog::LOG_ERR, m)
-   end
+      end
 
       def log_nopc(level, m)
         Syslog.log(level, m.gsub('%', '%%'))
@@ -49,41 +52,54 @@ module Byteback
   module Log
     @@me = File.expand_path($PROGRAM_NAME).split('/').last
 
-    @@logger = if STDIN.tty? && !ENV['BYTEBACK_TO_SYSLOG']
-                 logger = Logger.new(STDERR)
-                 logger.level = Logger::DEBUG
-                 logger.formatter = proc { |severity, _datetime, _progname, msg|
-                   if severity == 'FATAL' || severity == 'ERROR'
-                     "*** #{msg}\n"
-                   else
-                     "#{msg}\n"
-                   end
-                 }
-                 logger
-               else
-                 Syslog.open(@@me)
-                 SyslogProxy
+
+    #
+    #  If we're running interactively then we have simple logging.
+    #
+    if STDIN.tty?
+
+      #
+      #  We log to the console.
+      #
+      logger = Logger.new(STDERR)
+      logger.level = Logger::DEBUG
+      logger.formatter = proc { |severity, _datetime, _progname, msg|
+        if severity == 'FATAL' || severity == 'ERROR'
+          "*** #{msg}\n"
+        else
+          "#{msg}\n"
+        end
+      }
+      @@logger = logger
+    else
+
+      #
+      #  Otherwise we log via our Syslog-proxy.
+      #
+      Syslog.open(@@me)
+      @@logger = SyslogProxy
     end
 
+    
     def debug(*a)
       @@logger.__send__(:debug, *a)
-  end
-
+    end
+    
     def info(*a)
       @@logger.__send__(:info, *a)
-  end
-
+    end
+    
     def warn(*a)
       @@logger.__send__(:warn, *a)
-  end
-
+    end
+    
     def fatal(*a)
       @@logger.__send__(:fatal, *a)
       exit 1
-  end
-
+    end
+    
     def error(*a)
       @@logger.__send__(:error, *a)
-  end
+    end
   end
 end
