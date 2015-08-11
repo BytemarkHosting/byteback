@@ -38,6 +38,10 @@ opts = Trollop.options do
       :type => :integer,
       :default => 3
 
+  opt :io_timeout, 'Number of seconds to allow I/O timeout for',
+      :type => :integer,
+      :default => 21600
+
   opt :retry_delay, 'Number of seconds between retries after an error',
       :type => :integer,
       :default => 300
@@ -62,6 +66,8 @@ lock_out_other_processes('byteback-backup')
 @destination = opts[:destination]
 @retry_number = opts[:retry_number]
 @retry_delay = opts[:retry_delay]
+@io_timeout = opts[:io_timeout] if opts[:io_timeout]
+
 
 # Read the default destination
 if File.exist?('/etc/byteback/destination')
@@ -72,6 +78,12 @@ end
 if File.exist?('/etc/byteback/key')
   @ssh_key = '/etc/byteback/key'
 end
+
+# If we have a local timeout-file then use that
+if File.exist?('/etc/byteback/io_timeout')
+  @io_timeout = File.foreach('/etc/byteback/io_timeout').first.to_i
+end
+
 
 #
 # Check our destination
@@ -175,13 +187,18 @@ def rsync(*sources)
   # at the end of the job, and rsync will do more work for big files without
   # it.
   #
-  # The timeout is set to 6 hours - rsync can spend a long time at the
-  # far end checking over its files at the far end without transfer, so we
-  # want to wait as long as possible without jeopardising the timing of the
-  # next backup run.  Obviously if rsync itself takes nearly 24 hours for a
-  # given filesystem, daily backups (with this tool) are out of the question.
+  # rsync can spend a long time at the far end checking over its files at
+  # the far end without transfer, so we want to wait as long as possible
+  # without jeopardising the timing of the next backup run.
   #
-  args = %w( rsync --archive --numeric-ids --delete-delay --inplace --relative --timeout 21600 )
+  #
+  args = %w( rsync --archive --numeric-ids --delete-delay --inplace --relative )
+
+  #
+  #  Add on the I/O-timeout
+  #
+  args += ['--timeout', @io_timeout ] unless ( @io_timeout.nil? )
+
 
   args += ['--rsh', "ssh -o BatchMode=yes -x -a -i #{@ssh_key} -l #{@destination_user}"]
   args << '--verbose' if @verbose
