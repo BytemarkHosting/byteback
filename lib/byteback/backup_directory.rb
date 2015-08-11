@@ -133,7 +133,7 @@ module Byteback
     def system_no_error(*args)
       args[-1] += ' > /dev/null' unless @verbose
       fail RuntimeError.new('Command failed: ' + args.join(' ')) unless
-       system(*args)
+        system(*args)
     end
   end
 
