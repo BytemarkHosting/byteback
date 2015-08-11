@@ -40,7 +40,7 @@ opts = Trollop.options do
 
   opt :io_timeout, 'Number of seconds to allow I/O timeout for',
       :type => :integer,
-      :default => 21600
+      :default => 10800
 
   opt :retry_delay, 'Number of seconds between retries after an error',
       :type => :integer,
