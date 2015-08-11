@@ -164,6 +164,8 @@ def ssh(*ssh_args)
           '-o', 'BatchMode=yes',
           '-o', 'ConnectionAttempts=5',
           '-o', 'ConnectTimeout=30',
+          '-o', 'Compression=yes',
+          '-o', 'CompressionLevel=3',
           '-o', 'ServerAliveInterval=60',
           '-o', 'TCPKeepAlive=yes',
           '-x', '-a',
