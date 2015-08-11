@@ -7,14 +7,12 @@ $LOAD_PATH.unshift('/usr/lib/byteback')
 $LOAD_PATH.unshift('./lib/')
 
 require 'trollop'
+require 'byteback/util'
+require 'byteback/log'
+include Byteback::Util
+include Byteback::Log
 
-#
-#  Show an error message and abort.
-#
-def fatal(str)
-  STDERR.puts(str)
-  exit(1)
-end
+
 
 #
 #  Run a remote command.
