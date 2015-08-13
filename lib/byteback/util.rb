@@ -35,8 +35,12 @@ module Byteback
       end
 
       # Own the pidfile ourselves
-      File.open(@@lockfile, 'w') do |lockfile|
-        lockfile.puts Process.pid
+      begin
+        File.open(@@lockfile, 'w') do |lockfile|
+          lockfile.puts Process.pid
+        end
+      rescue => _ex
+        fatal("Failed to open lockfile - are you running as root?")
       end
     end
 
