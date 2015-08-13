@@ -113,7 +113,6 @@ end
 ##
 if __FILE__ == $PROGRAM_NAME
 
-
   ME = $PROGRAM_NAME.split('/').last
 
   opts = Trollop.options do
@@ -261,6 +260,13 @@ if __FILE__ == $PROGRAM_NAME
   #
   fatal("Could not read ssh key #{@ssh_key}") unless File.readable?(@ssh_key)
 
+
+  #
+  # Run our pre-backup actions, if any
+  #
+  run_parts( "/etc/byteback/pre-backup.d/" )
+
+  
   #
   # Test ssh connection is good before we start
   #  
