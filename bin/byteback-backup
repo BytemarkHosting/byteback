@@ -60,7 +60,7 @@ def rsync(*sources)
   #
   #  Add on the I/O-timeout
   #
-  args += ['--timeout', @io_timeout ] unless ( @io_timeout.nil? )
+  args += ['--timeout', @io_timeout.to_s ] unless ( @io_timeout.nil? )
 
 
   args += ['--rsh', "ssh -o BatchMode=yes -x -a -i #{@ssh_key} -l #{@destination_user}"]
@@ -101,7 +101,6 @@ end
 #  Run all the executable-scripts in the specified directory.
 #
 def run_parts(dir)
-
   if File.directory? dir
       args = ['run-parts', dir ]
       log_system(*args)
