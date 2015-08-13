@@ -97,7 +97,16 @@ def rsync(*sources)
 end
 
 
+#
+#  Run all the executable-scripts in the specified directory.
+#
+def run_parts(dir)
 
+  if File.directory? dir
+      args = ['run-parts', dir ]
+      log_system(*args)
+  end
+end
 
 
 ##
