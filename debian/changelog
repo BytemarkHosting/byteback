@@ -1,3 +1,11 @@
+byteback (0.3.7) stable; urgency=medium
+
+  * Updated to make a new release:
+    - Timeout is configurable via a file, and defaults to three-hours.
+    - We have support for run-parts.
+
+ -- Steve Kemp <steve@bytemark.co.uk>  Tue, 18 Aug 2015 11:11:11 +0000
+
 byteback (0.3.6) stable; urgency=medium
 
   * Updated to add the 'byteback-restore' program.  This allows listing
