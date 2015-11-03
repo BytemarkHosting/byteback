@@ -89,7 +89,7 @@ more information about filters.
 It is also possible to add extra rsync flags to the configuration.  The
 following flags are always set:
 
-  --archive --numeric-ids --delete-delay --inplace --relative --timeout 43200
+  --archive --numeric-ids --delete-during --inplace --relative --timeout 43200
 
 If you wish to add to that (e.g. --xattrs --acl --hard-links) then simply add
 them to /etc/byteback/rsync_flags.  These extra flags get appended after the

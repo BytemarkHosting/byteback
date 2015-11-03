@@ -55,7 +55,7 @@ def rsync(*sources)
   # without jeopardising the timing of the next backup run.
   #
   #
-  args = %w( rsync --archive --numeric-ids --delete-delay --inplace --relative )
+  args = %w( rsync --archive --numeric-ids --delete-during --inplace --relative )
 
   #
   #  Add on the I/O-timeout
