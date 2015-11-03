@@ -1,3 +1,10 @@
+byteback (0.3.8) stable; urgency=medium
+
+  * Update the default flags passed to rsync, to allow deletions
+    to occur during a transfer, rather than at the end.
+
+ -- Steve Kemp <steve@bytemark.co.uk>  Tue, 3 Nov 2015 15:55:51 +0000
+
 byteback (0.3.7) stable; urgency=medium
 
   * Updated to make a new release:
