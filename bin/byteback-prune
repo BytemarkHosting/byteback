@@ -123,7 +123,17 @@ unless @do_prune_force
     warn('Not enough disc space history to make a decision')
     exit 0
   end
+
+  #
+  # Do not prune unless at least one snapshot is a week old
+  #
+  last_week = now - 7*86400
+  unless snapshots.any?{|snapshot| last_week > snapshot.time}
+    warn('There are no snapshots older than a week.  Not pruning.')
+    exit 0
+  end
 end
+
 
 exit 0 unless
   (@do_prune && File.exist?(PRUNING_FLAG)) ||
