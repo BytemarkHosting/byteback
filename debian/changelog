@@ -1,3 +1,10 @@
+byteback (0.3.9) stable; urgency=medium
+
+  * Do not prune backups unless there is one backup (from any host) that is
+    older than a week.  Pruning can still be forced.
+
+ -- Patrick J Cherry <patrick@bytemark.co.uk>  Fri, 13 Nov 2015 10:24:58 +0000
+
 byteback (0.3.8) stable; urgency=medium
 
   * Update the default flags passed to rsync, to allow deletions
