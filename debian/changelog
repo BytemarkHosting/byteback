@@ -1,3 +1,9 @@
+byteback (0.3.10) stable; urgency=medium
+
+  * Fixed bug introduced in last release caused by a missing variable.
+
+ -- Patrick J Cherry <patrick@bytemark.co.uk>  Tue, 17 Nov 2015 14:01:28 +0000
+
 byteback (0.3.9) stable; urgency=medium
 
   * Do not prune backups unless there is one backup (from any host) that is
