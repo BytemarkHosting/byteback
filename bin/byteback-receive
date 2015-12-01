@@ -1,4 +1,5 @@
 #!/usr/bin/ruby
+# encoding: UTF-8
 #
 # Program to receive backups and run rsync in receive mode.  Must check that
 # user as authorised by SSH is allowed to access particular directory.
@@ -7,6 +8,8 @@ $LOAD_PATH << '/usr/lib/byteback'
 
 require 'trollop'
 require 'byteback'
+require 'byteback/restore'
+
 include Byteback::Log
 
 if ENV['SSH_ORIGINAL_COMMAND']
@@ -22,28 +25,51 @@ fatal("#{byteback_root} does not exist") unless File.directory?(byteback_root)
 #
 #  Force restores to be limited to the hostname we're connecting form
 #
-if (ARGV[0] == 'restore')
-  ARGV[0] = 'rsync'
-  a = []
-  ARGV.each do |tmp|
-    if  tmp =~ /^\/(.*)/
-      tmp = "#{byteback_host}/#{Regexp.last_match(1).dup}"
+if (ARGV[0] == 'byteback-restore')
+  args = ["rsync"]
+  revision = nil 
+
+  while((arg = ARGV.shift) != ".")
+    break if arg.nil?
+
+    verbose = arg if arg == "--verbose"
+
+    if arg == "--revision"
+      revision = ARGV.shift
+    else
+      args << arg
     end
-    a.push(tmp)
   end
-  exec(*a)
+ 
+  restore = Byteback::Restore.new(byteback_root)
+  restore.revision = revision if revision
+  restore.find(Byteback::Restore.decode_args(ARGV))
+
+  Dir.chdir(byteback_host)
+
+  restore.results.each do |r|
+    args <<  File.join(".", r.snapshot, r.path)
+  end
+
+  info(args.join(" "))
+  exec(*args)
+
 elsif ARGV[0] == 'rsync'
   ARGV[-1] = "#{byteback_root}/current"
   exec(*ARGV)
+
 elsif ARGV[0] == 'byteback-snapshot'
   ARGV.concat(['--root', "#{byteback_root}"])
   exec(*ARGV)
+
 end
 
 opts = Trollop.options do
   opt :verbose, 'Print diagnostics'
   opt :ping, 'Check connection parameters and exit'
-  opt :list, 'Show backed up files matching the given pattern', :type => :string
+  opt :list, 'Show backed up files matching the given pattern'
+  opt :list_all, 'Show all stored versions of a file'
+  opt :revision, 'Show backed up files in a certain revision.', :default => '*'
   opt :restore, 'Perform a restoration operation', :type => :string
   opt :complete, 'Mark current backup as complete'
 end
@@ -52,7 +78,18 @@ error('Please only choose one mode') if opts[:ping] && opts[:complete]
 if opts[:complete]
   system('byteback-snapshot', '--root', byteback_root)
 elsif opts[:list]
-  system("cd #{byteback_root} && find . -print | grep #{opts[:list]}")
+  args = Byteback::Restore.decode_args(ARGV[1..-1])
+
+  restore = Byteback::Restore.new(byteback_root)
+  restore.revision = opts[:revision]
+  restore.find(args, :all => opts[:list_all], :verbose => opts[:verbose])
+
+  if restore.results.empty?
+    puts "** Sorry.  There were no files matching:"
+    puts "--> "+args.join("\n--> ")
+  else
+    puts restore.list
+  end
   exit(0)
 elsif opts[:ping]
   exit 0

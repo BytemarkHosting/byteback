@@ -1,3 +1,10 @@
+byteback (0.4.0) stable; urgency=medium
+
+  * Re-vamped restore command.  Needs further documentation.
+  * Closes security hole with byteback-restore command (closes #12403).
+
+ -- Patrick J Cherry <patrick@bytemark.co.uk>  Tue, 01 Dec 2015 12:35:35 +0000
+
 byteback (0.3.10) stable; urgency=medium
 
   * Fixed bug introduced in last release caused by a missing variable.
