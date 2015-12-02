@@ -23,27 +23,40 @@ byteback_root = ENV['HOME'] + '/' + ENV['BYTEBACK_HOST']
 fatal("#{byteback_root} does not exist") unless File.directory?(byteback_root)
 
 #
-#  Force restores to be limited to the hostname we're connecting form
+# Calling byteback-restore really needs rsync to restore the files.
 #
-
-
-
 if (ARGV[0] == 'byteback-restore')
+  #
+  # Ignore the first arg
+  #
+  ARGV.shift
+
   args = ["rsync"]
-  snapshot = nil 
+  snapshot = nil
+  verbose = false
+  all = false
 
-  while((arg = ARGV.shift) != ".")
-    break if arg.nil?
-
-    verbose = arg if arg == "--verbose"
-
-    if arg == "--snapshot"
-      snapshot = ARGV.shift
-    else
-      args << arg
+  #
+  # Mangle the arguments, and pull out any that are not-rsync compatible.
+  #
+  while(arg = ARGV.shift)
+    case arg
+      when "."
+        break
+      when /^-([^-]*v[^-]*|-verbose)$/
+        verbose = true
+        args << arg
+      when "--snapshot"
+        snapshot = ARGV.shift
+      when "--all"
+        all = true
+      else
+        args << arg
     end
   end
- 
+
+
+
   restore = Byteback::Restore.new(byteback_root)
   restore.snapshot = snapshot if snapshot
   restore.find(Byteback::Restore.decode_args(ARGV))
