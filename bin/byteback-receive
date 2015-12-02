@@ -59,10 +59,15 @@ if (ARGV[0] == 'byteback-restore')
   # ownership at the restorers end.
   args << "--exclude=."
 
+  #
+  # Search for certain files
+  # DANGER the args might be too long if lots of files are returned.
+  #
+  paths = Byteback::Restore.decode_args(ARGV)
 
   restore = Byteback::Restore.new(byteback_root)
   restore.snapshot = snapshot if snapshot
-  restore.find(Byteback::Restore.decode_args(ARGV))
+  restore.find(paths, :all => all)
 
   Dir.chdir(byteback_host)
 
@@ -70,7 +75,16 @@ if (ARGV[0] == 'byteback-restore')
     args <<  File.join(".", r.snapshot, r.path)
   end
 
-  info(args.join(" "))
+  if restore.results.empty?
+    STDERR.puts "** Sorry.  There were no files matching:"
+    STDERR.puts "--> "+paths.join("\n--> ")
+    exit 1
+  end
+
+  STDERR.puts "Restoring:"
+  STDERR.puts restore.list
+  STDERR.puts(args.join(" ")) if verbose
+
   exec(*args)
 
 elsif ARGV[0] == 'rsync'
