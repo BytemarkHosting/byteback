@@ -1,6 +1,6 @@
 require 'ffi-xattr'
 require 'scanf'
-require 'pp'
+require 'time'
 
 module Byteback
   class RestoreFile
