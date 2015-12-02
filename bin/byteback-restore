@@ -55,7 +55,7 @@ def restore_files(paths, snapshot)
   #
   # Basic args
   #
-  args = %w(rsync --archive --acls --numeric-ids --inplace --relative --xattrs --compress --no-implied-dirs)
+  args = %w(rsync --archive --numeric-ids --inplace --relative --compress)
 
   #
   #  Add on the I/O-timeout
@@ -64,6 +64,14 @@ def restore_files(paths, snapshot)
   args += ['--rsh', "ssh -o BatchMode=yes -x -a -i #{@ssh_key} -l #{@destination_user}"]
   args << '--verbose' if @verbose
   args += ['--rsync-path', "byteback-restore --fake-super --snapshot #{snapshot}"]
+
+  #
+  # To add extra rsync flags, a file can be used.  This can have flags all on one line, or one per line.
+  #
+  if File.exists?("/etc/byteback/rsync_flags")
+    args += File.readlines("/etc/byteback/rsync_flags").map(&:chomp)
+  end
+
   dst = "#{@destination_user}@#{@destination_host}:"
 
   paths.each do |path|
