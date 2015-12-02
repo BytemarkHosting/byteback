@@ -28,7 +28,7 @@ class RestoreTest < Test::Unit::TestCase
       system("setfattr --name user.rsync.%stat -v \"41755 12,34 56:78\" #{File.join(@byteback_root, @snapshot, f)}")
     end
 
-    r = Byteback::Restore.find(@byteback_root, "/srv/foo.com/public/htdocs/*.html")
+    r = Byteback::Restore.find(@byteback_root, "*", "/srv/foo.com/public/htdocs/*.html")
   
     r.list 
   end
