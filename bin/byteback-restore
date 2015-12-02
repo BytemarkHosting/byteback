@@ -35,9 +35,9 @@ def ssh(*ssh_args)
   system(*args)
 end
 
-def list_files(snapshot, list_all, pattern)
-  args = ['byteback-receive', '--snapshot', snapshot, '--list'] 
-  args << "--list-all" if list_all
+def list_files(snapshot, all, pattern)
+  args = ['byteback-receive', '--snapshot', snapshot, '--list']
+  args << "--all" if all
   args << @verbose if @verbose
   args += Byteback::Restore.encode_args(pattern)
   ssh(*args)
@@ -98,28 +98,36 @@ if __FILE__ == $PROGRAM_NAME
   opts = Trollop.options do
     banner "#{ME}: Restore a file to this system from a byteback-enabled server\n "
 
-    opt :restore, "Restore the files"
+    opt :list, "List or find files on the backup server.  This is the default mode."
 
-    opt :snapshot, "The snaphot to use.",
+    opt :restore, "Restore files from the backup server."
+
+    opt :snapshot, "The specific snapshot to use",
         :type => :string, :default => "*"
 
-    opt :destination, 'Backup destination (i.e. user@host:/path).',
+    opt :destination, 'Backup destination (i.e. user@host:/path)',
         :type => :string
 
-    opt :verbose, 'Show debugging messages'
-
-    opt :io_timeout, 'Number of seconds to allow I/O timeout for',
+    opt :io_timeout, 'Number of seconds to allow I/O to timeout',
           :type => :integer,
-          :default => 10800
+          :default => 300
 
     opt :ssh_key, 'SSH key filename',
         :type => :string,
         :default => '/etc/byteback/key',
         :short => 'k'
 
-    opt :list_all, 'List all versrions of each file'
-    
+    opt :all, 'List or restore all versrions of each file',
+        :short => 'a'
+
+    opt :verbose, 'Show more output'
+
   end
+
+  #
+  # Make sure we know what we're doing.
+  #
+  fatal("Please choose either --list or --restore") if opts[:list] and opts[:restore]
 
   @verbose = opts[:verbose] ? '--verbose' : nil
   @io_timeout = opts[:io_timeout] if opts[:io_timeout]
@@ -139,7 +147,7 @@ if __FILE__ == $PROGRAM_NAME
   #
   @ssh_key = opts[:ssh_key] unless  opts[:ssh_key].nil?
   @destination = opts[:destination] unless  opts[:destination].nil?
-  
+
   #
   # Check our destination
   #
@@ -175,6 +183,6 @@ if __FILE__ == $PROGRAM_NAME
     exit(0)
   end
 
-  list_files(opts[:snapshot], opts[:list_all], ARGV.collect{|a| File.expand_path(a)})
+  list_files(opts[:snapshot], opts[:all], ARGV.collect{|a| File.expand_path(a)})
   exit(0)
 end
