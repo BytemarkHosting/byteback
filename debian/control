@@ -13,17 +13,17 @@ Package: byteback
 Architecture: all
 Depends: ${shlibs:Depends}, ${misc:Depends}, ruby | ruby-interpreter, rsync, openssh-client, ruby-ffi | libffi-ruby
 Description: Maintenance-free client & server backup scripts for Linux
-  byteback encapsulates Bytemark's "best practice" for maintenance-free backups
-  with easy client and server setup.
-  .
-  "Maintenance-free" means that we'd rather make full use of a fixed amount of
-  disc space.  Management of disc space must be completely automatic, so the
-  process never grinds to a halt for reasons that could be automatically
-  resolved.  Failed backups can be restarted in case of network problems.
-  .
-  We use the standard OpenSSH on the server for encrypted transport & access
-  control, btrfs for simple snapshots and rsync for efficient data transfer
-  across the network.
-  .
-  Backups should require as little configuration as possible to be safe - just
-  the server address should be enough.
+ byteback encapsulates Bytemark's "best practice" for maintenance-free backups
+ with easy client and server setup.
+ .
+ "Maintenance-free" means that we'd rather make full use of a fixed amount of
+ disc space.  Management of disc space must be completely automatic, so the
+ process never grinds to a halt for reasons that could be automatically
+ resolved.  Failed backups can be restarted in case of network problems.
+ .
+ We use the standard OpenSSH on the server for encrypted transport & access
+ control, btrfs for simple snapshots and rsync for efficient data transfer
+ across the network.
+ .
+ Backups should require as little configuration as possible to be safe - just
+ the server address should be enough.
