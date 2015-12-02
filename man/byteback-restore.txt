@@ -1,0 +1,174 @@
+NAME
+
+byteback-restore - Restore a file to this system from a byteback-enabled server
+
+SYNOPSIS
+
+byteback-restore [ --restore | --list ] [ --snapshot s ]
+     [ --destination d ]  [ --io-timeout i ] [ --ssh-key k ]
+     [ --list-all ] [ --help ] [ --verbose ] pattern pattern..
+
+OPTIONS
+
+  --list, -l           List or find files
+  --restore, -r        Restore files
+  --snapshot, -s  s    The snaphot to use. (Default: *)
+  --destination, -d s  Backup destination (i.e. user@host:/path). The default is read from /etc/bytebackde
+  --io-timeout, -i i   Number of seconds to allow I/O timeout for (default: 300)
+  --ssh-key, -k s      SSH key filename (default: /etc/byteback/key)
+  --all, -a            List/restore all versrions of each file
+  --verbose, -v        Show debugging messages.
+  --help, -h           Show a brief usage message.
+
+DESCRIPTION
+
+Firstly the pattern argument. This is expanded relative to the current directory,
+if it is not an absolute path, before being globbed. It is best to quote the
+pattern to avoid premature shell expansion. Multiple patterns can be supplied.
+
+To list files that could be restored, just give a pattern. The --list flag can
+be used for clairty, but it is entirely optional.
+
+To restore files, use the --restore flag. Restores are always done into the
+current working directory. See EXAMPLES below.
+
+GLOBBING
+
+The following character are "globbed":
+
+ - "*" matches any filename.
+ - "**" matches directories recursively.
+ - "?" matches any single character.
+ - "[set]" matches any set of characters, working in the same way as regular expressions.
+ - "{a,b}" matches either literal "a" or literal "b"
+ - "\\" escapes the next metacharacter.
+
+Note that to match "dotfiles", the pattern "{*,.*}" should be used.
+
+The full glob syntax is documented in the Ruby documentation for the Dir#glob
+method.
+
+EXAMPLES
+
+To list the latest copies of the files available, just call the command with
+no flags.. The --list flag is optional.
+
+  # byteback-restore '/home/patch/.bash*'
+  snapshot modestring size  uid  gid  mtime                     path
+  ----------------------------------------------------------------------------------------
+  current  -rw------- 47931 1000 1000 2015-11-29 09:26:10 +0000 /home/patch/.bash_history
+  current  -rw-r--r-- 220   1000 1000 2014-03-10 10:13:33 +0000 /home/patch/.bash_logout
+  current  -rw-r--r-- 3638  1000 1000 2015-07-30 16:33:30 +0100 /home/patch/.bashrc
+
+To list all different available versions of a file, use --all.
+
+  # byteback-restore --all '/home/patch/.bashrc'
+  snapshot              modestring size uid  gid  mtime                     path
+  ----------------------------------------------------------------------------------------------
+  2015-07-17T15:11+0100 -rw-r--r-- 3637 1000 1000 2014-03-10 10:13:33 +0000 /home/patch/.bashrc
+  current               -rw-r--r-- 3638 1000 1000 2015-07-30 16:33:30 +0100 /home/patch/.bashrc
+
+To list every single copy of a file, use --verbose. Notice that a number of
+these entries match on size and mtime.
+
+  # byteback-restore --verbose '/home/patch/.bashrc'
+  ssh -o BatchMode=yes -o ConnectionAttempts=5 -o ConnectTimeout=30 -o ServerAliveInterval=60 -o TCPKeepAlive=yes -x -a -i /etc/byteback/key -l byteback backups.default.cherry.uk0.bigv.io byteback-receive --snapshot * --list --verbose /home/patch/.bashrc
+  snapshot              modestring size uid  gid  mtime                     path
+  ----------------------------------------------------------------------------------------------
+  2015-04-30T11:44+0100 -rw-r--r-- 3637 1000 1000 2014-03-10 10:13:33 +0000 /home/patch/.bashrc
+  2015-05-05T15:05+0100 -rw-r--r-- 3637 1000 1000 2014-03-10 10:13:33 +0000 /home/patch/.bashrc
+  2015-07-17T15:11+0100 -rw-r--r-- 3637 1000 1000 2014-03-10 10:13:33 +0000 /home/patch/.bashrc
+  2015-11-25T11:14+0000 -rw-r--r-- 3638 1000 1000 2015-07-30 16:33:30 +0100 /home/patch/.bashrc
+  2015-11-26T13:38+0000 -rw-r--r-- 3638 1000 1000 2015-07-30 16:33:30 +0100 /home/patch/.bashrc
+  2015-11-27T10:48+0000 -rw-r--r-- 3638 1000 1000 2015-07-30 16:33:30 +0100 /home/patch/.bashrc
+  2015-11-30T15:37+0000 -rw-r--r-- 3638 1000 1000 2015-07-30 16:33:30 +0100 /home/patch/.bashrc
+  current               -rw-r--r-- 3638 1000 1000 2015-07-30 16:33:30 +0100 /home/patch/.bashrc
+
+Restoring is always to the current directory, and into directories named after the snapshots.
+This next command restores the last copies of the files shown in the first
+listing above into the "current" directory, as they were all from the "current"
+snapshot.
+
+  # byteback-restore --restore '/home/patch/.bash*'
+  Restoring:
+  snapshot modestring size  uid  gid  mtime                     path
+  ----------------------------------------------------------------------------------------
+  current  -rw------- 47931 1000 1000 2015-11-29 09:26:10 +0000 /home/patch/.bash_history
+  current  -rw-r--r-- 220   1000 1000 2014-03-10 10:13:33 +0000 /home/patch/.bash_logout
+  current  -rw-r--r-- 3638  1000 1000 2015-07-30 16:33:30 +0100 /home/patch/.bashrc
+
+Using find(1), we can see the files restored. Note that the permissions on the
+parent directory have been set correctly.
+
+  # find current/ -ls
+  422049    4 drwxr-xr-x   3 root     root         4096 Nov 16 16:04 current/
+  422050    4 drwxr-xr-x   3 root     root         4096 Mar 12  2014 current/home
+  422885    4 drwxr-xr-x   2 patch    patch        4096 Nov 29 09:26 current/home/patch
+  422886    4 -rw-r--r--   1 patch    patch         220 Mar 10  2014 current/home/patch/.bash_logout
+  422887    4 -rw-r--r--   1 patch    patch        3638 Jul 30 16:33 current/home/patch/.bashrc
+
+To restore the files from a specific snapshot, use the --snapshot flag.
+
+  # byteback-restore --restore --snapshot '2015-07-17T15:11+0100' '/home/patch/.bash*'
+  Restoring:
+  snapshot              modestring size  uid  gid  mtime                     path
+  -----------------------------------------------------------------------------------------------------
+  2015-07-17T15:11+0100 -rw------- 38504 1000 1000 2015-07-17 13:42:17 +0100 /home/patch/.bash_history
+  2015-07-17T15:11+0100 -rw-r--r-- 220   1000 1000 2014-03-10 10:13:33 +0000 /home/patch/.bash_logout
+  2015-07-17T15:11+0100 -rw-r--r-- 3637  1000 1000 2014-03-10 10:13:33 +0000 /home/patch/.bashrc
+
+These have been restored into the 2015-07-17T15:11+0100 directory.
+
+  # find 2015-07-17T15:11+0100 -type f -ls
+  422911    4 -rw-r--r--   1 patch    patch         220 Mar 10  2014 2015-07-17T15:11+0100/home/patch/.bash_logout
+  422913   40 -rw-------   1 patch    patch       38504 Jul 17 13:42 2015-07-17T15:11+0100/home/patch/.bash_history
+  422912    4 -rw-r--r--   1 patch    patch        3637 Mar 10  2014 2015-07-17T15:11+0100/home/patch/.bashrc
+
+Finally, to restore all available copies of the files, use the --all flag.
+This will restore all copies shown when --list is used with the --all flag.
+
+  # byteback-restore --restore --all '/home/patch/.bashrc'
+  Restoring:
+  snapshot              modestring size  uid  gid  mtime                     path
+  -----------------------------------------------------------------------------------------------------
+  2015-07-17T15:11+0100 -rw-r--r-- 3637  1000 1000 2014-03-10 10:13:33 +0000 /home/patch/.bashrc
+  current               -rw-r--r-- 3638  1000 1000 2015-07-30 16:33:30 +0100 /home/patch/.bashrc
+
+We now have two versions of the same file, in different restore directories.
+
+  # find -type f -ls
+  946020    4 -rw-r--r--   1 patch    patch        3637 Mar 10  2014 ./2015-07-17T15:11+0100/home/patch/.bashrc
+  422893    4 -rw-r--r--   1 patch    patch        3638 Jul 30 16:33 ./current/home/patch/.bashrc
+
+CAVEATS
+
+If a pattern given matches a directory, then the whole directory will be
+restored recursively, not just the directory itself. This can be shown by
+adding the --verbose flag.
+
+  # byteback-restore --verbose --restore '/home/patch'
+  rsync --archive --numeric-ids --inplace --relative --compress --timeout 300 --rsh ssh -o BatchMode=yes -x -a -i /etc/byteback/key -l byteback --verbose --rsync-path byteback-restore --fake-super --snapshot * byteback@backups.default.cherry.uk0.bigv.io:/home/patch .
+  Restoring:
+  snapshot modestring size uid  gid  mtime                     path
+  -------------------------------------------------------------------------
+  current  drwxr-xr-x 5152 1000 1000 2015-11-29 09:26:22 +0000 /home/patch
+  rsync --fake-super --server --sender -vlogDtprRze.iLsfx --timeout=300 --numeric-ids --inplace --exclude=. . ./current/home/patch
+  receiving incremental file list
+  current/home/patch/
+  current/home/patch/.mrconfig
+  current/home/patch/.pam_environment
+  current/home/patch/.plan
+  current/home/patch/.profile
+  current/home/patch/.psql_history
+  etc...
+
+
+SEE ALSO
+
+byteback-receive(1), byteback-prune(1), http://ruby-doc.org/core/Dir.html#method-c-glob
+
+AUTHOR
+
+Patrick J Cherry <patrick@bytemark.co.uk>
+
+

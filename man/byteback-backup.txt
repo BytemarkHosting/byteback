@@ -1,0 +1,69 @@
+NAME
+
+  byteback-backup - Back up this system to a byteback-enabled server
+
+OPTIONS
+ 
+   --destination, -d <s>    Backup destination (i.e. user@host:/path).
+   --source, -s <s+>        Source paths (default: /)
+   --exclude, -x <s+>       Paths to exclude
+   --retry-number, -r <i>:  Number of retries on error (default: 3)
+   --io-timeout, -i <i>:    Number of seconds to allow I/O timeout for (default: 10800)
+   --retry-delay, -e <i>:   Number of seconds between retries after an error (default: 300)
+   --ssh-key, -k <s>        SSH key filename (default: /etc/byteback/key)
+   --verbose, -v            Show debugging messages
+   --help, -h               Show this message
+
+Additional excludes can be specified using /etc/byteback/rsync_filter, which is
+an rsync filter file.  See the rsync man page for information on how this
+works.
+
+DESCRIPTION
+
+You can set "byteback-backup"  on a daily cron job to start backing up
+the server on a regular basis.
+
+Without any further options this will copy every file from the root
+downwards.
+
+It currently excludes /tmp, /var/tmp, /var/cache/apt/archives,
+/swap.file and /var/backups/localhost which (on Bytemark systems) do
+not need to be part of any backup.  To specify which locations are
+excluded, add them to /etc/byteback/excludes, one per line.  The
+filesystems /dev, /proc, /run and /sys are always excluded.
+
+It is possible to configure a full rsync filter by creating the file
+/etc/byteback/rsync_filter, which is parsed to rsync via the --filter
+flag.  Note that excludes on the command line take precedence, unless
+the filter starts with an exclamation mark, which resets everything.
+If you do this, you'll need to specify /proc, /sys, etc manually.  See
+the rsync manpage for more information about filters.
+
+It is also possible to add extra rsync flags to the configuration.
+The following flags are always set:
+
+  --archive --numeric-ids --delete-excluded --delete-during --inplace --relative 
+
+If you wish to add to that (e.g. --xattrs --acl --hard-links) then
+simply add them to /etc/byteback/rsync_flags.  These extra flags get
+appended after the default flags above, so they take precedence.
+
+When the backup has completed successfully, the server will take a
+snapshot so that the client can't alter the backups, and then "prune"
+the backup snapshots to ensure that the next backup is likely to run
+OK.
+
+If the backup is interrupted or dies unexpected, running
+"byteback-backup" will cause the backup to be resumed, with rsync
+saving the work of re-copying any files that hadn't changed.  By
+default this will happen automatically up to 5 times, with a 10 minute
+pause in between each attempt.
+
+SEE ALSO
+
+  byteback-restore(1), byteback-prune(1)
+
+AUTHOR
+
+  Patrick J Cherry <patrick@bytemark.co.uk>
+

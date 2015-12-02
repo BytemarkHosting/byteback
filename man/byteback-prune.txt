@@ -1,0 +1,47 @@
+NAME
+
+  byteback-prune - Prune old byteback backup directories to ensure there's enough space
+
+OPTIONS
+
+  --minpercent, -m <i>   Start prune when disk has less than this %age free (default: 5)
+  --maxpercent, -a <i>   Stop prune when disk has more than this %age free (default: 10)
+  --list, -l             List backups in pruning order, no other action
+  --prune, -p            Prune the next backup if necessary
+  --prune-force, -r      Prune the next backup regardless
+  --order, -o <s>        Order backups by 'age' or 'importance' (default: importance)
+  --verbose, -v          Show debugging messages
+   --help, -h            Show this message
+
+DESCRIPTION
+
+Unless you are backing up a very small amount of data, backups will
+always need pruning, i.e. old backups must be deleted to make way for
+newer ones.
+
+This program deals with this operation by deleting old backups until a
+certain amount of free space is achieved, which is currently fixed at
+10% free.  This can be changed by setting the --maxpercent option.
+
+ * midday today;
+ * midday on the previous 6 days;
+ * midday on the previous 4 Sundays;
+ * midday on every fourth Sunday before that, where the "fourth
+   Sunday" is calculated as every fourth Sunday in the Unix epoch,
+   i.e.  every fourth Sunday since Sunday 4th Jan 1970. 
+
+So when you ask the pruner to run, the backup closest to the present
+time will be the last one to be deleted.  The backup closes to "1 day
+ago" will be the second-last, and so on.  We score every backup in
+this way until we end up with a "least important" snapshot to delete.
+
+The pruner will not delete backups younger than 7 days.
+
+SEE ALSO
+
+  byteback-backup(1), byteback-restore(1), byteback-receive(1)
+
+AUTHOR
+
+  Patrick J Cherry <patrick@bytemark.co.uk>
+

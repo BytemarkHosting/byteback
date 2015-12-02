@@ -68,65 +68,13 @@ client to start and watch the backup.
 
 Configuring byteback-backup
 ---------------------------
-You can now set "byteback-backup"  on a daily cron job to start backing up the
-server on a regular basis.
 
-Without any further options this will copy every file from the root downwards.
-
-It currently excludes /tmp, /var/tmp, /var/cache/apt/archives, /swap.file and
-/var/backups/localhost which (on Bytemark systems) do not need to be part of
-any backup.  To specify which locations are excluded, add them to
-/etc/byteback/excludes, one per line.  The filesystems /dev, /proc, /run and
-/sys are always excluded.
-
-It is possible to configure a full rsync filter by creating the file
-/etc/byteback/rsync_filter, which is parsed to rsync via the --filter flag.
-Note that excludes on the command line take precedence, unless the filter
-starts with an exclamation mark, which resets everything.  If you do this,
-you'll need to specify /proc, /sys, etc manually.  See the rsync manpage for
-more information about filters.
-
-It is also possible to add extra rsync flags to the configuration.  The
-following flags are always set:
-
-  --archive --numeric-ids --delete-during --inplace --relative --timeout 43200
-
-If you wish to add to that (e.g. --xattrs --acl --hard-links) then simply add
-them to /etc/byteback/rsync_flags.  These extra flags get appended after the
-default flags above, so they take precedence.
-
-When the backup has completed successfully, the server will take a snapshot
-so that the client can't alter the backups, and then "prune" the backup 
-snapshots to ensure that the next backup is likely to run OK.
-
-If the backup is interrupted or dies unexpected, running "byteback backup" 
-will cause the backup to be resumed, with rsync saving the work of re-copying
-any files that hadn't changed.  By default this will happen automatically up to 
-5 times, with a 10 minute pause in between each attempt.
+This is now documented in the manapge for byteback-backup(1).
 
 Viewing and restoring backups
 -----------------------------
 
-Backups can be viewed on the server filesystem, although the permissions will
-be wrong.  The rsync "fake-super" flag is used to store the permissions in a
-user attribute list.  To view this list on the server, run 
-
-  getfattr -d  $filename
-
-This command is part of the "attr" package in Debian.
-
-To restore a file you may use the `byteback-restore` command, which allows you to find all files matching a pattern via a command-like:
-
-    byteback-restore --file /etc/passwd
-
-To actually restore the file, to the current directory, run:
-
-    byteback-restore --file /etc/passwd --revision=current
-
-Recursive restorations are supported too:
-
-    byteback-restore --file /srv --revision=current
-
+This is now documented in the manapge for byteback-restore(1).
 
 The trust model
 ---------------
@@ -151,43 +99,15 @@ over a long enough period of time:
 
 Pruning behaviour
 -----------------
-Unless you are backing up a very small amount of data, backups will always 
-need pruning, i.e. old backups must be deleted to make way for newer ones.
 
-There is a program on the server called byteback-prune which deals with this
-operation.  It deletes old backups until a certain amount of free space is
-achieved, which is currently fixed at 10% free.  This can be changed by setting
-the --maxpercent option.
-
-It can choose which backups to delete by one of two methods:
-
-1) the 'age' method simply deletes the oldest backup;
-
-2) the 'importance' method tries to retain a more spread-out backup pattern
-by "scoring" each backup according to how close it is to a set of "target 
-times".  These are:
-
- * midday today;
- * midday on the previous 6 days;
- * midday on the previous 4 Sundays;
- * midday on every 4th Sunday before that.
-
-So when you ask the pruner to run, the backup closest to the present time will
-be the last one to be deleted.  The backup closes to "1 day ago" will be the
-second-last, and so on.  We score every backup in this way until we end up with
-a "least important" snapshot to delete.
-
-The upshot of the second strategy should be that we retain closely-spaced
-daily backups, but as they get too numerous, we make sure that we are reluctant
-to delete our very oldest.
-
-The "4th Sunday" is calculated as every 4th Sunday in the Unix epoch, i.e.
-every fourth Sunday since Sunday 4th Jan 1970. 
+This is now documented in byteback-prune(1).
 
 Acknowledgements
 ----------------
-For maximum portability, I've included two libraries.  Thanks very much to
+For maximum portability, I've included three libraries.  Thanks very much to
 their authors:
 
-sys-filesystem by Daniel J. Berger: https://github.com/djberg96/sys-filesystem
-trollop by William Morgan: https://github.com/wjessop/trollop
+* sys-filesystem by Daniel J. Berger: https://github.com/djberg96/sys-filesystem
+* trollop by William Morgan: https://github.com/wjessop/trollop
+* ffi-xattr by Jari Bakken: https://github.com/jarib/ffi-xattr
+

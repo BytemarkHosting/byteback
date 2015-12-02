@@ -3,3 +3,10 @@
 
 %:
 	dh $@ 
+
+override_dh_auto_build-indep:
+	$(MAKE) docs
+
+override_dh_auto_clean:
+	$(MAKE) clean
+
