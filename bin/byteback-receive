@@ -55,6 +55,9 @@ if (ARGV[0] == 'byteback-restore')
     end
   end
 
+  # Always exclude the current directory, because it can change the
+  # ownership at the restorers end.
+  args << "--exclude=."
 
 
   restore = Byteback::Restore.new(byteback_root)
