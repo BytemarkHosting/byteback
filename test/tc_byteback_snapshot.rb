@@ -1,6 +1,5 @@
 $: << File.dirname(__FILE__)+"/../lib"
 
-require 'pp'
 require 'test/unit'
 require 'byteback/backup_directory'
 require 'time'
