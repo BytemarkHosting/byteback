@@ -62,6 +62,10 @@ elsif ARGV[0] == 'byteback-snapshot'
   ARGV.concat(['--root', "#{byteback_root}"])
   exec(*ARGV)
 
+elsif ARGV[0] == "restore"
+  puts "** Your byteback package needs to be updated.  Please update and try again."
+  exit(1)
+
 end
 
 opts = Trollop.options do
