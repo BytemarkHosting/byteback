@@ -55,7 +55,7 @@ module Byteback
       @results
     end
 
-    def find(paths, full = false)
+    def find(paths, opts = {})
       results = []
       #
       # Make sure we've an array, and that we get rid of any ".." nonsense.
@@ -67,17 +67,26 @@ module Byteback
         Dir.glob(File.expand_path(File.join(@byteback_root, @snapshot, path))).collect do |f|
           restore_file = Byteback::RestoreFile.new(f, @byteback_root, @now)
         end
-      end.flatten.sort{|a,b| [a.path, a.snapshot_time] <=> [b.path, b.snapshot_time]}
+      end.flatten
+
 
       #
       # If we want an unpruned list, return it now.
       #
-      return @results if full
+      if opts == true or (opts.is_a?(Hash) and opts[:verbose])
+        @results = @results.sort{|a,b| [a.path, a.snapshot_time] <=> [b.path, b.snapshot_time]}
+        return @results
+      end
 
+      @results = @results.sort{|a,b| [a.path, b.snapshot_time] <=> [b.path, a.snapshot_time]}
       pruned_results = []
 
       @results.each do |r|
-        pruned_results << r unless pruned_results.include?(r)
+        if (opts.is_a?(Hash) and opts[:all])
+          pruned_results << r unless pruned_results.include?(r)
+        else
+          pruned_results << r unless pruned_results.any?{|pr| pr.path == r.path}
+        end
       end
 
       @results = pruned_results
