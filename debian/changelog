@@ -2,8 +2,20 @@ byteback (0.4.0) stable; urgency=medium
 
   * Re-vamped restore command.  Needs further documentation.
   * Closes security hole with byteback-restore command (closes #12403).
+  * Fixed up copyright file for bundled libraries.
+  * Added flag to catch outdated clients (and let them know to update).
+  * Changed the word "revision" to "snapshot" since this is what we generally
+    refer to.
+  * byteback-restore now uses the same rsync_flags file as the
+    byteback-backup.
+  * Excluded the current directory "." from rsync, so the working directory
+    doesn't get its permissions mashed.
+  * If no files match during a restore, an error message is now shown, instead
+    of the rsync help text.
+  * Restore the most recent copy of a file by default.
+  * Added manpages.
 
- -- Patrick J Cherry <patrick@bytemark.co.uk>  Tue, 01 Dec 2015 12:35:35 +0000
+ -- Patrick J Cherry <patrick@bytemark.co.uk>  Wed, 02 Dec 2015 17:01:20 +0000
 
 byteback (0.3.10) stable; urgency=medium
 
