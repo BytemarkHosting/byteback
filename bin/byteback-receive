@@ -25,24 +25,27 @@ fatal("#{byteback_root} does not exist") unless File.directory?(byteback_root)
 #
 #  Force restores to be limited to the hostname we're connecting form
 #
+
+
+
 if (ARGV[0] == 'byteback-restore')
   args = ["rsync"]
-  revision = nil 
+  snapshot = nil 
 
   while((arg = ARGV.shift) != ".")
     break if arg.nil?
 
     verbose = arg if arg == "--verbose"
 
-    if arg == "--revision"
-      revision = ARGV.shift
+    if arg == "--snapshot"
+      snapshot = ARGV.shift
     else
       args << arg
     end
   end
  
   restore = Byteback::Restore.new(byteback_root)
-  restore.revision = revision if revision
+  restore.snapshot = snapshot if snapshot
   restore.find(Byteback::Restore.decode_args(ARGV))
 
   Dir.chdir(byteback_host)
@@ -73,7 +76,7 @@ opts = Trollop.options do
   opt :ping, 'Check connection parameters and exit'
   opt :list, 'Show backed up files matching the given pattern'
   opt :list_all, 'Show all stored versions of a file'
-  opt :revision, 'Show backed up files in a certain revision.', :default => '*'
+  opt :snapshot, 'Show backed up files in a certain snapshot.', :default => '*'
   opt :restore, 'Perform a restoration operation', :type => :string
   opt :complete, 'Mark current backup as complete'
 end
@@ -85,7 +88,7 @@ elsif opts[:list]
   args = Byteback::Restore.decode_args(ARGV[1..-1])
 
   restore = Byteback::Restore.new(byteback_root)
-  restore.revision = opts[:revision]
+  restore.snapshot = opts[:snapshot]
   restore.find(args, :all => opts[:list_all], :verbose => opts[:verbose])
 
   if restore.results.empty?

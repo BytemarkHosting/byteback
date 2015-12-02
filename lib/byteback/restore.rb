@@ -5,9 +5,9 @@ module Byteback
 
   class Restore
 
-    def self.find(byteback_root, revision, paths)
+    def self.find(byteback_root, snapshot, paths)
       x = Byteback::Restore.new(byteback_root)
-      x.revision = revision
+      x.snapshot = snapshot
       x.find(paths)
       return x
     end
@@ -39,15 +39,15 @@ module Byteback
       #
       @byteback_root = File.expand_path(byteback_root)
       @now     = Time.now
-      @revision = "*"
+      @snapshot = "*"
       @results = []
     end
 
-    def revision=(r)
+    def snapshot=(r)
       if r =~ /^[a-z0-9:\+\*\-]+$/i
-        @revision = r
+        @snapshot = r
       else
-        puts "*** Warning: Bad revision #{r.inspect}"
+        puts "*** Warning: Bad snapshot #{r.inspect}"
       end
     end
 
@@ -64,7 +64,7 @@ module Byteback
       seen  = []
 
       @results = paths.collect do |path|
-        Dir.glob(File.expand_path(File.join(@byteback_root, @revision, path))).collect do |f|
+        Dir.glob(File.expand_path(File.join(@byteback_root, @snapshot, path))).collect do |f|
           restore_file = Byteback::RestoreFile.new(f, @byteback_root, @now)
         end
       end.flatten.sort{|a,b| [a.path, a.snapshot_time] <=> [b.path, b.snapshot_time]}

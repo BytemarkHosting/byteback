@@ -35,8 +35,8 @@ def ssh(*ssh_args)
   system(*args)
 end
 
-def list_files(revision, list_all, pattern)
-  args = ['byteback-receive', '--revision', revision, '--list'] 
+def list_files(snapshot, list_all, pattern)
+  args = ['byteback-receive', '--snapshot', snapshot, '--list'] 
   args << "--list-all" if list_all
   args << @verbose if @verbose
   args += Byteback::Restore.encode_args(pattern)
@@ -51,8 +51,7 @@ end
 # do that by setting "rsync-path" to point to a faux script.
 #
 #
-def restore_files(paths, revision)
-
+def restore_files(paths, snapshot)
   #
   # Basic args
   #
@@ -64,7 +63,7 @@ def restore_files(paths, revision)
   args += ['--timeout', @io_timeout.to_s ] unless ( @io_timeout.nil? )
   args += ['--rsh', "ssh -o BatchMode=yes -x -a -i #{@ssh_key} -l #{@destination_user}"]
   args << '--verbose' if @verbose
-  args += ['--rsync-path', "byteback-restore --fake-super --revision #{revision}"]
+  args += ['--rsync-path', "byteback-restore --fake-super --snapshot #{snapshot}"]
   dst = "#{@destination_user}@#{@destination_host}:"
 
   paths.each do |path|
@@ -93,7 +92,7 @@ if __FILE__ == $PROGRAM_NAME
 
     opt :restore, "Restore the files"
 
-    opt :revision, "The version of the file to restore.",
+    opt :snapshot, "The snaphot to use.",
         :type => :string, :default => "*"
 
     opt :destination, 'Backup destination (i.e. user@host:/path).',
@@ -164,10 +163,10 @@ if __FILE__ == $PROGRAM_NAME
     #
     #  Restore a file
     #
-    restore_files(ARGV.collect{|a| File.expand_path(a)}, opts[:revision])
+    restore_files(ARGV.collect{|a| File.expand_path(a)}, opts[:snapshot])
     exit(0)
   end
 
-  list_files(opts[:revision], opts[:list_all], ARGV.collect{|a| File.expand_path(a)})
+  list_files(opts[:snapshot], opts[:list_all], ARGV.collect{|a| File.expand_path(a)})
   exit(0)
 end
