@@ -102,24 +102,32 @@ elsif ARGV[0] == "restore"
 end
 
 opts = Trollop.options do
-  opt :verbose, 'Print diagnostics'
   opt :ping, 'Check connection parameters and exit'
-  opt :list, 'Show backed up files matching the given pattern'
-  opt :list_all, 'Show all stored versions of a file'
-  opt :snapshot, 'Show backed up files in a certain snapshot.', :default => '*'
-  opt :restore, 'Perform a restoration operation', :type => :string
   opt :complete, 'Mark current backup as complete'
+  opt :list, 'Show backed up files matching the given pattern'
+  opt :all,  'Show all stored versions of a file'
+  opt :snapshot, 'Show backed up files in a certain snapshot.', :default => '*'
+  opt :verbose, 'Print diagnostics'
 end
 
-error('Please only choose one mode') if opts[:ping] && opts[:complete]
+#
+# Make sure we don't get crazy option combinations.
+#
+n_modes = opts.keys.inject(0) do |s,m|
+    s += 1 if  [:ping, :complete, :list].include?(m)
+end
+
+error('Please only choose one mode') unless n_modes == 1
+
 if opts[:complete]
   system('byteback-snapshot', '--root', byteback_root)
+
 elsif opts[:list]
   args = Byteback::Restore.decode_args(ARGV[1..-1])
 
   restore = Byteback::Restore.new(byteback_root)
   restore.snapshot = opts[:snapshot]
-  restore.find(args, :all => opts[:list_all], :verbose => opts[:verbose])
+  restore.find(args, :all => opts[:all], :verbose => opts[:verbose])
 
   if restore.results.empty?
     puts "** Sorry.  There were no files matching:"
@@ -127,10 +135,14 @@ elsif opts[:list]
   else
     puts restore.list
   end
+
   exit(0)
+
 elsif opts[:ping]
   exit 0
+
 else
   STDERR.print "byteback-receive failed\n"
   exit 9
+
 end
