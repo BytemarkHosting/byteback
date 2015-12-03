@@ -13,7 +13,7 @@ OPTIONS
   --list, -l           List or find files
   --restore, -r        Restore files
   --snapshot, -s  s    The snaphot to use. (Default: *)
-  --destination, -d s  Backup destination (i.e. user@host:/path). The default is read from /etc/bytebackde
+  --destination, -d s  Backup destination (i.e. user@host:/path). The default is read from /etc/byteback
   --io-timeout, -i i   Number of seconds to allow I/O timeout for (default: 300)
   --ssh-key, -k s      SSH key filename (default: /etc/byteback/key)
   --all, -a            List/restore all versrions of each file
@@ -27,7 +27,7 @@ if it is not an absolute path, before being globbed. It is best to quote the
 pattern to avoid premature shell expansion. Multiple patterns can be supplied.
 
 To list files that could be restored, just give a pattern. The --list flag can
-be used for clairty, but it is entirely optional.
+be used for clarity, but it is entirely optional.
 
 To restore files, use the --restore flag. Restores are always done into the
 current working directory. See EXAMPLES below.
