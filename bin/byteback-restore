@@ -1,5 +1,5 @@
 #!/usr/bin/ruby
-# enocoding: UTF-8
+# encoding: UTF-8
 #
 # Restore a file from the most recent backup, from the remote host.
 #
