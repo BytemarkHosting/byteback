@@ -1,3 +1,10 @@
+byteback (0.4.1) stable; urgency=low
+
+  * Updated the package build-dependencies to correctly generate
+    manpages.
+
+ -- Steve Kemp <steve.kemp@bytemark.co.uk>  Thu, 17 Dec 2015 16:11:16 +0000
+
 byteback (0.4.0) stable; urgency=medium
 
   * Re-vamped restore command.  Needs further documentation.
