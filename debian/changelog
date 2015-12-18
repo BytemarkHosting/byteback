@@ -1,3 +1,9 @@
+byteback (0.4.2) stable; urgency=medium
+
+  * Added "." to the rsync restore command to limit what gets restored.
+
+ -- Patrick J Cherry <patrick@bytemark.co.uk>  Fri, 18 Dec 2015 12:15:29 +0000
+
 byteback (0.4.1) stable; urgency=low
 
   * Updated the package build-dependencies to correctly generate
