@@ -71,6 +71,8 @@ if (ARGV[0] == 'byteback-restore')
 
   Dir.chdir(byteback_host)
 
+  args << "."
+
   restore.results.each do |r|
     args <<  File.join(".", r.snapshot, r.path)
   end
