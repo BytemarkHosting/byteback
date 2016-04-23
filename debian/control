@@ -6,8 +6,8 @@ Uploaders: Steve Kemp <steve@bytemark.co.uk>
 Build-Depends: debhelper (>= 7.0.50~), txt2man
 Standards-Version: 3.9.6
 # Vcs-Git:
-Vcs-Browser: https://projects.bytemark.co.uk/projects/byteback/repository
-Homepage: https://projects.bytemark.co.uk/projects/byteback
+Vcs-Browser: https://github.com/BytemarkHosting/byteback.git
+Homepage: https://github.com/BytemarkHosting/byteback
 
 Package: byteback
 Architecture: all

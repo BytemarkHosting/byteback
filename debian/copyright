@@ -1,6 +1,6 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: byteback
-Source: <https://projects.bytemark.co.uk/projects/byteback>
+Source: <https://github.com/BytemarkHosting/byteback>
 
 Files: lib/trollop.rb
 Copyright:: 2007 William Morgan <wmorgan-trollop@masanjin.net>
