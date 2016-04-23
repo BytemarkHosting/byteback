@@ -60,7 +60,7 @@ This is now documented in the manpage for byteback-backup(1).
 Viewing and restoring backups
 -----------------------------
 
-This is now documented in the manapge for byteback-restore(1).
+This is now documented in the manpage for byteback-restore(1).
 
 
 The trust model
