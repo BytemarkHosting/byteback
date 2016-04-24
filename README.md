@@ -17,7 +17,7 @@ Install the '`byteback`' package on the server, along with its dependencies.
 
 You then need to perform the following local setup on the server, which can securely handle backups for multiple clients.  You need a dedicated user (which is usually called 'byteback') with a home directory on a btrfs filesystem.  You will need to mount the filesystem with the '`user_subvol_rm_allowed`' flag to enable pruning to work (or run that part as root).
 
-The following commands are appropriate for a Debian system, you might need to alter it for other Linux distributions, or if you are not using LVM for your discs:
+The following commands are appropriate for a Debian system, you might need to alter them for other Linux distributions, or if you are not using LVM for your discs:
 
     #
 	# Create a dedicated UNIX user which will store everyone's backups, and
@@ -60,7 +60,7 @@ This is now documented in the manpage for byteback-backup(1).
 Viewing and restoring backups
 -----------------------------
 
-This is now documented in the manapge for byteback-restore(1).
+This is now documented in the manpage for byteback-restore(1).
 
 
 The trust model
