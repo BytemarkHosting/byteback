@@ -116,7 +116,7 @@ end
 # Make sure we don't get crazy option combinations.
 #
 n_modes = opts.keys.inject(0) do |s,m|
-    s += 1 if  [:ping, :complete, :list].include?(m)
+    [:ping, :complete, :list].include?(m) ? s += 1 : s
 end
 
 error('Please only choose one mode') unless n_modes == 1
