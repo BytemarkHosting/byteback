@@ -6,7 +6,7 @@ Summary:        Maintenance-free client & server backup scripts for Linux
 Group:          Applications/System
 License:        Ruby and GPLv2+ and ASL 2.0 and Artistic 2.0
 URL:            https://github.com/BytemarkHosting/byteback
-Source0:        byteback.tar.gz
+Source0:        byteback_%{version}.orig.tar.gz
 
 BuildArch:      noarch
 BuildRequires:  txt2man
@@ -33,7 +33,7 @@ the server address should be enough.
 
 
 %prep
-%setup -q -n byteback
+%setup -q -c
 # No binary files, so should go in /usr/share.
 sed -i -e 's|/usr/lib/byteback|/usr/share/byteback|g' bin/*
 # Required to load system gems.
