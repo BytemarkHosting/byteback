@@ -253,7 +253,7 @@ if __FILE__ == $PROGRAM_NAME
     e.gsub(/\/+/, '/')
   end
 
-  fatal('Must suply --destination or put it into /etc/bytebackup/destination') unless @destination
+  fatal('Must supply --destination or put it into /etc/bytebackup/destination') unless @destination
 
   #
   # Test that we have an SSH-key which we can read.
