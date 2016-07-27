@@ -230,11 +230,11 @@ if __FILE__ == $PROGRAM_NAME
 
     COMMON_JUNK = %w(
     /swap.file
-    /tmp
-    /var/backups/localhost
-    /var/cache/apt/archives
-    /var/lib/php5
-    /var/tmp
+    /tmp/
+    /var/backups/localhost/
+    /var/cache/apt/archives/
+    /var/lib/php5/
+    /var/tmp/
   )
 
     MOUNT_HEADINGS = %w( spec file vfstype mntops freq passno ).map(&:to_sym)
