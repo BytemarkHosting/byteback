@@ -235,6 +235,7 @@ if __FILE__ == $PROGRAM_NAME
     /var/cache/apt/archives/
     /var/lib/php5/
     /var/tmp/
+    /var/lib/mysql/
   )
 
     MOUNT_HEADINGS = %w( spec file vfstype mntops freq passno ).map(&:to_sym)
