@@ -1,0 +1,31 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+
+use Data::Dumper;
+
+use lib '/etc/byteback/scripts.d';
+use Bytemyback::ini qw(readconf writeconf generateconf);
+
+# Shim script to determine which MySQL backup(s) to run if any
+
+my %config = Bytemyback::ini::readconf();
+if (!%config) {
+    %config = Bytemyback::ini::generateconf();
+}
+
+# Backup directory shouldn't be world-readable
+system("mkdir -p /var/backups/byteback");
+system("chmod 700 /var/backups/byteback");
+
+# List of each script to run (not mutually exclusive). Generated automatically if it doesn't exist
+
+my $backup_method = $config{'backup_method'};
+
+foreach my $method (keys %$backup_method) {
+    next unless $backup_method->{$method};
+    print "Running /etc/byteback/scripts.d/Bytemyback/${method} pre\n";
+    `/etc/byteback/scripts.d/Bytemyback/${method} pre` if (-x "/etc/byteback/scripts.d/Bytemyback/${method}");
+    print "Finished /etc/byteback/scripts.d/Bytemyback/${method} pre\n";
+}

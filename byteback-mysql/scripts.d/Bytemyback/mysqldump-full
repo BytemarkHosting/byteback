@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [ "$1" == "pre" ]; then
+    HOST=`hostname`
+    echo "Dumping all databases into one backup file"
+    mkdir -p /var/backups/byteback/mysqldump-full
+    mysqldump --defaults-file=/etc/mysql/debian.cnf -A --events | gzip > /var/backups/byteback/mysqldump-full/dump.sql.gz && mauvesend -i mysqldump-split-${HOST}-low -c now -r +30h -s "mysqldump on ${HOST} has not run for over a day" --detail='Please try running manually to see what the problem was, and check the mailing list'
+fi
