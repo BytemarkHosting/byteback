@@ -1,0 +1,27 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+
+use lib '/etc/byteback/scripts.d';
+use Bytemyback::ini qw(readconf writeconf generateconf);
+
+use Sys::Hostname;
+
+# Shim script to determine which MySQL backup(s) to run if any
+
+my %config = Bytemyback::ini::readconf();
+
+my $backup_method = $config{'backup_method'};
+
+foreach my $method (keys %$backup_method) {
+    next unless $backup_method->{$method};
+    print "Running /etc/byteback/scripts.d/Bytemyback/${method} post\n";
+    `/etc/byteback/scripts.d/Bytemyback/${method} post` if (-x "/etc/byteback/scripts.d/Bytemyback/${method}");
+    print "Finished /etc/byteback/scripts.d/Bytemyback/${method} post\n";
+
+    # Each script should have a heartbeat alert. They may also have specific failure alerts on both client and
+    # server side.
+    my $host = hostname;
+    system("mauvesend -i $method-hb-${host}-low -c now -r +26h -s 'MySQL backup method $method on ${host} has not run for over a day' --detail='Please try running manually to see what the problem was, and check the mailing list'");
+}

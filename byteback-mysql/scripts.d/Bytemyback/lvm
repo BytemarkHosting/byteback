@@ -1,0 +1,80 @@
+#!/usr/bin/perl
+
+use DBI;
+use Data::Dumper;
+
+use warnings;
+use strict;
+
+my $mountpoint = "/var/backups/bytemyback/mnt/";
+my $snapshot_name = "byteback_data_snap";
+my $snapshot_size = "20G";
+my $dbh;
+
+die "Must specify either pre or post\n" unless @ARGV;
+
+if ($ARGV[0] eq 'pre') {
+    # Check snapshot doesn't already exist
+    die "Snapshot still exists\n" if `lvs 2>&1` =~ /$snapshot_name/;
+    my $lock_tables = 1; # This will be configurable. Whether or not it runs FLUSH TABLES WITH READ LOCK before taking the snapshot.
+    my $defaults_file = '/etc/mysql/debian.cnf';
+    my $dsn = "DBI:mysql:;mysql_read_default_file=$defaults_file";
+    $dbh = DBI->connect(
+        $dsn, 
+        undef, 
+        undef, 
+        {RaiseError => 1}
+    ) or die "DBI::errstr: $DBI::errstr";
+
+    my $data_dir = ask_mysql_for_var('datadir');
+    my $lvm_dir = get_LVM_dir();
+    die "MySQL doesn't seem to be running from LVM\n" if !$lvm_dir;
+    $dbh->do("FLUSH TABLES WITH READ LOCK") if $lock_tables;
+    # Create snapshot
+    my $mounted_lvm = `df $lvm_dir | tail -n1 | cut -f1 -d" "`;
+    if (!`lvcreate -n $snapshot_name -L $snapshot_size --snapshot $mounted_lvm`) {
+        my $error = $!;
+        $dbh->do("UNLOCK TABLES") if $lock_tables;
+        die("Unable to create snapshot: $!\n");
+    }
+    else {
+        $dbh->do("UNLOCK TABLES") if $lock_tables;
+        chomp (my $mapped_snapshot = "/dev/mapper/" . `dmsetup ls | grep $snapshot_name | grep -v cow | cut -f1 -d "	"`);
+        `mkdir -p $mountpoint`;
+        `mount $mapped_snapshot $mountpoint`;
+        `touch ${mountpoint}.bytebacklvm`;
+    }
+}
+elsif ($ARGV[0] eq 'post') {
+    `umount $mountpoint`;
+    chomp (my $mapped_snapshot = "/dev/mapper/" . `dmsetup ls | grep $snapshot_name | grep -v cow | cut -f1 -d "	"`);
+    `lvremove -f $mapped_snapshot`;
+}
+
+sub ask_mysql_for_var {
+    my $var = '@@' . shift;
+    my $query = $dbh->prepare("SELECT ${var}");
+    $query->execute;
+    return $query->fetchrow_hashref()->{$var};
+}
+
+sub get_LVM_dir {
+    # This is a bit hacky, it checks if lvs returns,
+    # then checks if the mountpoint is /dev/mapper/$firstbit-$secondbit
+    # Returns true only if above matches and lvs output has $secondbit $firstbit somewhere
+    my $datadir = ask_mysql_for_var('datadir');
+    my $lvs = `lvs 2>&1`;
+    if (($?) || ($lvs =~ /No volume groups found/)) {
+        return 0;
+    }
+    my $output = `df $datadir | tail -n1`;
+    $output =~ s/--/:/g;
+    if ($output =~ m#/dev/mapper/([\w:]+)-([\w:]+)\s#) {
+        my ($vg, $lv) = ($1, $2);
+        $vg =~ s/:/-/; $lv =~ s/:/-/;
+        if ($lvs =~ /\s+$lv\s+$vg\s/) {
+            return $datadir;
+        }
+    }
+    return 0;
+}
