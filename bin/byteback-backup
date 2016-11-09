@@ -230,11 +230,12 @@ if __FILE__ == $PROGRAM_NAME
 
     COMMON_JUNK = %w(
     /swap.file
-    /tmp
-    /var/backups/localhost
-    /var/cache/apt/archives
-    /var/lib/php5
-    /var/tmp
+    /tmp/
+    /var/backups/localhost/
+    /var/cache/apt/archives/
+    /var/lib/php5/
+    /var/tmp/
+    /var/lib/mysql/
   )
 
     MOUNT_HEADINGS = %w( spec file vfstype mntops freq passno ).map(&:to_sym)
@@ -253,7 +254,7 @@ if __FILE__ == $PROGRAM_NAME
     e.gsub(/\/+/, '/')
   end
 
-  fatal('Must suply --destination or put it into /etc/bytebackup/destination') unless @destination
+  fatal('Must supply --destination or put it into /etc/bytebackup/destination') unless @destination
 
   #
   # Test that we have an SSH-key which we can read.

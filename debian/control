@@ -6,8 +6,8 @@ Uploaders: Steve Kemp <steve@bytemark.co.uk>
 Build-Depends: debhelper (>= 7.0.50~), txt2man
 Standards-Version: 3.9.6
 # Vcs-Git:
-Vcs-Browser: https://projects.bytemark.co.uk/projects/byteback/repository
-Homepage: https://projects.bytemark.co.uk/projects/byteback
+Vcs-Browser: https://github.com/BytemarkHosting/byteback.git
+Homepage: https://github.com/BytemarkHosting/byteback
 
 Package: byteback
 Architecture: all
@@ -27,3 +27,10 @@ Description: Maintenance-free client & server backup scripts for Linux
  .
  Backups should require as little configuration as possible to be safe - just
  the server address should be enough.
+
+Package: byteback-mysql
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}, perl, libdbi-perl,
+Description: Maintenance-free backups for MySQL
+ leveraging byteback this package allows simple and transparent
+ backups of MySQL databases.

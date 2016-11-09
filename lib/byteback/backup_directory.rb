@@ -155,8 +155,7 @@ module Byteback
           next if entry[0] == '.'
           name = File.expand_path(ENV['HOME'] + '/' + entry)
           File.directory?(name + '/current') ? BackupDirectory.new(name) : nil
-        end
-          .compact
+        end.compact
       end
 
       # Returns every snapshot in every backup directory
@@ -195,8 +194,7 @@ module Byteback
           # directory name must represent a parseable Time
           nil
         end
-      end
-        .compact
+      end.compact
     end
 
     # Create a new snapshot of 'current'

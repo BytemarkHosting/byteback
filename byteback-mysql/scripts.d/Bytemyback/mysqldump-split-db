@@ -1,0 +1,44 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+use Sys::Hostname;
+
+if ((!@ARGV) or ($ARGV[0] ne 'pre')) {
+    exit;
+}
+
+# Quick mysqldump wrapper to dump individual databases and alert if it fails at all
+my $failed = 0;  # only set to 0 once
+my $failed_databases = '';
+my $backup_directory = '/var/backups/byteback/mysqldump-split-db/';
+`mkdir -p $backup_directory`;
+
+my @databases = `echo "SHOW DATABASES" | mysql --defaults-file=/etc/mysql/debian.cnf`;
+shift @databases;    # Get rid of 'Databases' title from the top
+foreach my $database (@databases) {
+    chomp($database);
+    next if $database eq "lost+found";
+    next if $database =~ /^#mysql..#lost\+found$/;
+    next if $database =~ /^information_schema$/;
+    next if $database =~ /^performance_schema$/;
+    next if $database =~ /^events$/;
+    next if $database =~ /^cond_instances$/;
+    print "Dumping $database\n";
+    # Need to get rid of this -f once we've fixed errors with views (access denied etc.)
+    my $gzip = -x '/usr/bin/pigz' ? '/usr/bin/pigz' : 'gzip';
+    my $error_code = system("mysqldump --defaults-file=/etc/mysql/debian.cnf --events -f $database | $gzip > ${backup_directory}/${database}.sql.gz\n");
+    if ($error_code) {
+        $failed++;
+        $failed_databases .= " $database";
+    }
+}
+
+my $host = hostname;
+if ($failed) {
+     $host = hostname;
+     system("mauvesend -i mysqldump-${host}-low -r now -s 'mysqldump on ${host} failed for $failed_databases' --detail='Please try running them manually to see what the problem was, and check the mailing list'");
+}
+else {
+     system("mauvesend -i mysqldump-${host}-low -c now -s 'mysqldump on ${host} failed for $failed_databases' --detail='Please try running them manually to see what the problem was, and check the mailing list'");
+}
