@@ -66,5 +66,12 @@ module Byteback
       pid2, status = Process.waitpid2(pid, 0)
       status.exitstatus
     end
+
+    def btrfs_bin
+      path = '/bin/btrfs'
+      path = '/sbin/btrfs' unless File.exists?(path)
+      path
+    end
+
   end
 end
