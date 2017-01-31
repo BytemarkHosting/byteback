@@ -69,7 +69,7 @@ module Byteback
 
     def btrfs_bin
       %w(/bin/btrfs /sbin/btrfs).each do |path|
-        return path if File.exist?(path)
+        return path if File.executable?(path)
       end
       raise Errno::ENOENT, 'btrfs'
     end
