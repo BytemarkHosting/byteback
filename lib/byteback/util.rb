@@ -66,5 +66,13 @@ module Byteback
       pid2, status = Process.waitpid2(pid, 0)
       status.exitstatus
     end
+
+    def btrfs_bin
+      %w(/bin/btrfs /sbin/btrfs).each do |path|
+        return path if File.exist?(path)
+      end
+      raise Errno::ENOENT, 'btrfs'
+    end
+
   end
 end

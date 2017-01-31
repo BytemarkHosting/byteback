@@ -81,7 +81,7 @@ def restore_files(paths, snapshot, all)
   end
 
   args << "."
-  puts args.join(" " ) if @verbose
+  puts args.join(" ") if @verbose
   system(*args)
 end
 
