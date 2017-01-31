@@ -1,6 +1,11 @@
+require 'byteback/utils'
+
 module Byteback
   # Represents a particular timestamped backup directory
   class Snapshot
+
+    include Byteback::Util
+
     class << self
       # What order to remove snapshots in to regain disk space?
       #
@@ -111,11 +116,11 @@ module Byteback
     end
 
     def create!(from)
-      system_no_error("/sbin/btrfs subvolume snapshot #{from} #{path}")
+      system_no_error("#{btrfs_bin} subvolume snapshot #{from} #{path}")
     end
 
     def delete!
-      system_no_error("/sbin/btrfs subvolume delete #{path}")
+      system_no_error("#{btrfs_bin} subvolume delete #{path}")
     end
 
     # Returns the size of the given snapshot (runs du, may be slow)
