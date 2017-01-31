@@ -1,4 +1,4 @@
-require 'byteback/utils'
+require 'byteback/util'
 
 module Byteback
   # Represents a particular timestamped backup directory
