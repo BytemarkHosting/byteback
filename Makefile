@@ -11,7 +11,7 @@ docs: man/byteback-prune.man man/byteback-restore.man man/byteback-backup.man
 # man/byteback-snapshot.man man/byteback-setup-client.man man/byteback-setup-client-receive.man man/byteback-receive.man
 
 test:
-	ruby test/tc_*.rb
+	ruby test/ts_byteback.rb
 
 clean:
 	$(RM)  man/*.man
