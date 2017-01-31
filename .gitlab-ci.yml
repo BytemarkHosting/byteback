@@ -5,21 +5,56 @@ stages:
 
 test: &test
   stage: test
-  image: $CI_REGISTRY/docker-images/layers:jessie-ruby
+  image: $CI_REGISTRY/docker-images/layers:stretch-ruby
   script:
     - apt-get install attr ruby-ffi
     - make test
 
-package: &package
+package:stretch: &package
   image: $CI_REGISTRY/docker-images/layers:$DISTRO-deb
   variables:
-    DISTRO: jessie
+    DISTRO: stretch
   stage: package
   script:
     - package
   artifacts:
     paths:
       - pkg/
+
+package:jessie:
+  <<: *package
+  variables:
+    DISTRO: jessie
+
+package:wheezy:
+  <<: *package
+  variables:
+    DISTRO: wheezy
+
+package:squeeze:
+  <<: *package
+  variables:
+    DISTRO: squeeze
+
+package:xenial:
+  <<: *package
+  variables:
+    DISTRO: xenial
+
+package:trusty:
+  <<: *package
+  variables:
+    DISTRO: trusty
+
+package:precise:
+  <<: *package
+  variables:
+    DISTRO: precise
+
+package:lucid:
+  <<: *package
+  variables:
+    DISTRO: lucid
 
 publish:
   stage: publish
