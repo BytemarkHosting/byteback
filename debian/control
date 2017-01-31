@@ -3,7 +3,7 @@ Section: ruby
 Priority: optional
 Maintainer: Patrick J Cherry <patrick@bytemark.co.uk>
 Uploaders: Steve Kemp <steve@bytemark.co.uk>
-Build-Depends: debhelper (>= 7.0.50~), txt2man, ruby | ruby-interpreter, ruby-ffi
+Build-Depends: debhelper (>= 7.0.50~), txt2man, ruby | ruby-interpreter, ruby-ffi, attr
 Standards-Version: 3.9.6
 # Vcs-Git:
 Vcs-Browser: https://github.com/BytemarkHosting/byteback.git

@@ -7,6 +7,7 @@ test: &test
   stage: test
   image: $CI_REGISTRY/docker-images/layers:jessie-ruby
   script:
+    - apt-get install attr ruby-ffi
     - make test
 
 package: &package
