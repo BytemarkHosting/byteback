@@ -45,10 +45,13 @@ module Byteback
       #
       @snapshot = full_path.sub(%r(^#{Regexp.escape @byteback_root}),'').split("/")[1]
 
-      if @snapshot == "current"
-        @snapshot_time = @now
-      else
+      #
+      # If we can parse the time, use it, otherwise assume "now".
+      #
+      begin
         @snapshot_time = Time.parse(@snapshot)
+      rescue ArgumentError
+        @snapshot_time = @now
       end
 
       #

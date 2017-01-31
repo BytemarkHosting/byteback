@@ -65,10 +65,9 @@ module Byteback
 
       @results = paths.collect do |path|
         Dir.glob(File.expand_path(File.join(@byteback_root, @snapshot, path))).collect do |f|
-          restore_file = Byteback::RestoreFile.new(f, @byteback_root, @now)
+          Byteback::RestoreFile.new(f, @byteback_root, @now)
         end
       end.flatten
-
 
       #
       # If we want an unpruned list, return it now.
