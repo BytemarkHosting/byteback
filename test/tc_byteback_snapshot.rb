@@ -1,5 +1,3 @@
-$: << File.dirname(__FILE__)+"/../lib"
-
 require 'test/unit'
 require 'byteback/backup_directory'
 require 'time'
@@ -58,7 +56,7 @@ class SnapshotTest < Test::Unit::TestCase
         if biggest_offset.nil? or offsets.max > biggest_offset
           biggest_offset = offsets.max
         else
-          puts "Oldest backup with space for #{limit} backups is #{offsets.max} days: #{offsets.join(", ")}"
+          puts "Oldest backup with space for #{limit} backups is #{offsets.max} days: #{offsets.join(", ")}" if $VERBOSE
           break
         end
 
@@ -70,7 +68,7 @@ class SnapshotTest < Test::Unit::TestCase
   end
 
   #
-  # This run the same test as above, execpt with 3 hosts all competeing for space
+  # This run the same test as above, execpt with 3 hosts all competing for space
   #
   def test_sort_by_importance_with_multiple_hosts
     start = Time.now
@@ -106,7 +104,7 @@ class SnapshotTest < Test::Unit::TestCase
         if biggest_offset.nil? or offsets.max > biggest_offset
           biggest_offset = offsets.max
         else
-          puts "Oldest backup with space for #{limit} backups and 3 hosts is #{offsets.max} days: #{offsets.join(", ")}"
+          puts "Oldest backup with space for #{limit} backups and 3 hosts is #{offsets.max} days: #{offsets.join(", ")}" if $VERBOSE
           break
         end
 
@@ -154,7 +152,7 @@ class SnapshotTest < Test::Unit::TestCase
         day += 1
         now += 86400
       end
-      puts "Oldest backup with space for #{limit} backups is #{offsets.max} days: #{offsets.join(", ")}"
+      puts "Oldest backup with space for #{limit} backups is #{offsets.max} days: #{offsets.join(", ")}" if $VERBOSE
 
     end
   end
