@@ -1,4 +1,5 @@
 #!/usr/bin/ruby
+# frozen_string_literal: true
 #
 # Program to free up space on the backup-storage volume, by removing
 # backups (whether by age, or importance).
@@ -17,12 +18,12 @@ opts = Trollop.options do
   banner "Prune old backup directories to ensure there's enough space"
 
   opt :minpercent, 'Start prune when disk has less than this %age free',
-      :type => :integer,
-      :default => 5
+      type: :integer,
+      default: 5
 
   opt :maxpercent, 'Stop prune when disk has more than this %age free',
-      :type => :integer,
-      :default => 10
+      type: :integer,
+      default: 10
 
   opt :list, 'List backups in pruning order, no other action'
 
@@ -31,8 +32,8 @@ opts = Trollop.options do
   opt :prune_force, 'Prune the next backup regardless'
 
   opt :order, "Order backups by 'age' or 'importance'",
-      :type => :string,
-      :default => 'importance'
+      type: :string,
+      default: 'importance'
 
   opt :verbose, 'Show debugging messages'
 end
@@ -80,7 +81,7 @@ gradient_30m = @df_history.gradient(1800)
 # Check whether we should still be pruning
 #
 @free = @df_history.list.last.percent_free
-PRUNING_FLAG = "#{ENV['HOME']}/.byteback.pruning"
+PRUNING_FLAG = "#{ENV['HOME']}/.byteback.pruning".freeze
 
 if @do_prune_force
   info('Forcing prune')
@@ -127,13 +128,12 @@ unless @do_prune_force
   #
   # Do not prune unless at least one snapshot is a week old
   #
-  last_week = Time.now - (7*86400)
-  unless snapshots.any?{|snapshot| last_week > snapshot.time}
+  last_week = Time.now - (7 * 86_400)
+  unless snapshots.any? { |snapshot| last_week > snapshot.time }
     warn('There are no snapshots older than a week.  Not pruning.')
     exit 0
   end
 end
-
 
 exit 0 unless
   (@do_prune && File.exist?(PRUNING_FLAG)) ||

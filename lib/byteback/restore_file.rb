@@ -35,7 +35,7 @@ module Byteback
 
     include Comparable
 
-    def initialize(full_path, byteback_root=".", now = Time.now)
+    def initialize(full_path, byteback_root = '.', now = Time.now)
       @full_path = full_path
       @byteback_root = byteback_root
       @now = now
@@ -43,7 +43,7 @@ module Byteback
       #
       # The snapshot is the first directory after the byteback_root
       #
-      @snapshot = full_path.sub(%r(^#{Regexp.escape @byteback_root}),'').split("/")[1]
+      @snapshot = full_path.sub(/^#{Regexp.escape @byteback_root}/, '').split('/')[1]
 
       #
       # If we can parse the time, use it, otherwise assume "now".
@@ -57,13 +57,13 @@ module Byteback
       #
       # Restore path
       #
-      @path = full_path.sub(%r(^#{Regexp.escape @byteback_root}/#{Regexp.escape @snapshot}),'')
+      @path = full_path.sub(%r{^#{Regexp.escape @byteback_root}/#{Regexp.escape @snapshot}}, '')
 
       @stat = @mode = @dev_major = @dev_minor = @uid = @gid = nil
     end
 
     def <=>(other)
-      [self.path,  self.mtime.to_i,  self.size] <=> [other.path, other.mtime.to_i, other.size]
+      [path, mtime.to_i, size] <=> [other.path, other.mtime.to_i, other.size]
     end
 
     def stat
@@ -71,36 +71,30 @@ module Byteback
       @stat
     end
 
-    def snapshot
-      @snapshot
-    end
+    attr_reader :snapshot
 
-    def snapshot_time
-      @snapshot_time
-    end
+    attr_reader :snapshot_time
 
-    def path
-      @path
-    end
+    attr_reader :path
 
     def to_s
-      sprintf("%10s %i %4i %4i %s %s %s", self.modestring, self.size, self.uid, self.gid, self.mtime.strftime("%b %2d %H:%M"), @snapshot, @path)
+      sprintf('%10s %i %4i %4i %s %s %s', modestring, size, uid, gid, mtime.strftime('%b %2d %H:%M'), @snapshot, @path)
     end
 
     def read_rsync_xattrs
-      xattr = Xattr.new(@full_path, :no_follow => false)
-      rsync_xattrs = xattr["user.rsync.%stat"]
+      xattr = Xattr.new(@full_path, no_follow: false)
+      rsync_xattrs = xattr['user.rsync.%stat']
       if rsync_xattrs
-        @mode, @dev_major, @dev_minor, @uid, @gid = rsync_xattrs.scanf("%o %d,%d %d:%d")
-        raise ArgumentError, "Corrupt rsync stat xattr found for #{@full_path} (#{rsync_xattrs})" unless [@mode, @dev_major, @dev_minor, @uid, @gid].all?{|i| i.is_a?(Integer)}
+        @mode, @dev_major, @dev_minor, @uid, @gid = rsync_xattrs.scanf('%o %d,%d %d:%d')
+        fail ArgumentError, "Corrupt rsync stat xattr found for #{@full_path} (#{rsync_xattrs})" unless [@mode, @dev_major, @dev_minor, @uid, @gid].all? { |i| i.is_a?(Integer) }
       else
-        warn "No rsync stat xattr found for #{@full_path}" 
-        @mode, @dev_major, @dev_minor, @uid, @gid = %w(mode dev_major dev_minor uid gid).collect{|m| self.stat.__send__(m.to_sym)}
+        warn "No rsync stat xattr found for #{@full_path}"
+        @mode, @dev_major, @dev_minor, @uid, @gid = %w(mode dev_major dev_minor uid gid).collect { |m| stat.__send__(m.to_sym) }
       end
     end
 
     def mode
-      return self.stat.mode if self.stat.symlink?
+      return stat.mode if stat.symlink?
       read_rsync_xattrs unless @mode
       @mode
     end
@@ -130,22 +124,22 @@ module Byteback
     #
     def ftypelet
       if file?
-        "-"
+        '-'
       elsif directory?
-        "d"
+        'd'
       elsif blockdev?
-        "b"
+        'b'
       elsif chardev?
-        "c"
+        'c'
       elsif symlink?
-        "l"
+        'l'
       elsif fifo?
-        "p"
+        'p'
       elsif socket?
-        "s" 
+        's'
       else
-        "?"
-      end 
+        '?'
+      end
     end
 
     #
@@ -153,7 +147,7 @@ module Byteback
     # This has mostly been copied from strmode from filemode.h in coreutils.
     #
     def modestring
-      str = ""
+      str = ''
       str << ftypelet
       str << ((mode & S_IRUSR == S_IRUSR) ? 'r' : '-')
       str << ((mode & S_IWUSR == S_IWUSR) ? 'w' : '-')
@@ -170,7 +164,7 @@ module Byteback
       str << ((mode & S_ISVTX == S_ISVTX) ?
                 ((mode & S_IXOTH == S_IXOTH) ? 't' : 'T') :
                 ((mode & S_IXOTH == S_IXOTH) ? 'x' : '-'))
-      return str
+      str
     end
 
     def socket?
@@ -178,7 +172,7 @@ module Byteback
     end
 
     def symlink?
-      self.stat.symlink? || (mode & S_IFMT) == S_IFLNK
+      stat.symlink? || (mode & S_IFMT) == S_IFLNK
     end
 
     def file?
@@ -202,17 +196,17 @@ module Byteback
     end
 
     def readlink
-      if self.stat.symlink?
+      if stat.symlink?
         File.readlink(@full_path)
       else
         File.read(@full_path).chomp
       end
     end
 
-    def method_missing(m, *args, &blk)
-      return self.stat.__send__(m) if self.stat.respond_to?(m)
+    def method_missing(m, *_args, &_blk)
+      return stat.__send__(m) if stat.respond_to?(m)
 
-      raise NoMethodError, m
-    end 
+      fail NoMethodError, m
+    end
   end
 end

@@ -25,13 +25,13 @@ fatal("#{byteback_root} does not exist") unless File.directory?(byteback_root)
 #
 # Calling byteback-restore really needs rsync to restore the files.
 #
-if (ARGV[0] == 'byteback-restore')
+if ARGV[0] == 'byteback-restore'
   #
   # Ignore the first arg
   #
   ARGV.shift
 
-  args = ["rsync"]
+  args = ['rsync']
   snapshot = nil
   verbose = false
   all = false
@@ -39,25 +39,25 @@ if (ARGV[0] == 'byteback-restore')
   #
   # Mangle the arguments, and pull out any that are not-rsync compatible.
   #
-  while(arg = ARGV.shift)
+  while (arg = ARGV.shift)
     case arg
-      when "."
-        break
-      when /^-([^-]*v[^-]*|-verbose)$/
-        verbose = true
-        args << arg
-      when "--snapshot"
-        snapshot = ARGV.shift
-      when "--all"
-        all = true
-      else
-        args << arg
+    when '.'
+      break
+    when /^-([^-]*v[^-]*|-verbose)$/
+      verbose = true
+      args << arg
+    when '--snapshot'
+      snapshot = ARGV.shift
+    when '--all'
+      all = true
+    else
+      args << arg
     end
   end
 
   # Always exclude the current directory, because it can change the
   # ownership at the restorers end.
-  args << "--exclude=."
+  args << '--exclude=.'
 
   #
   # Search for certain files
@@ -67,25 +67,25 @@ if (ARGV[0] == 'byteback-restore')
 
   restore = Byteback::Restore.new(byteback_root)
   restore.snapshot = snapshot if snapshot
-  restore.find(paths, :all => all)
+  restore.find(paths, all: all)
 
   Dir.chdir(byteback_host)
 
-  args << "."
+  args << '.'
 
   restore.results.each do |r|
-    args <<  File.join(".", r.snapshot, r.path)
+    args << File.join('.', r.snapshot, r.path)
   end
 
   if restore.results.empty?
-    STDERR.puts "** Sorry.  There were no files matching:"
-    STDERR.puts "--> "+paths.join("\n--> ")
+    STDERR.puts '** Sorry.  There were no files matching:'
+    STDERR.puts '--> ' + paths.join("\n--> ")
     exit 1
   end
 
-  STDERR.puts "Restoring:"
+  STDERR.puts 'Restoring:'
   STDERR.puts restore.list
-  STDERR.puts(args.join(" ")) if verbose
+  STDERR.puts(args.join(' ')) if verbose
 
   exec(*args)
 
@@ -94,11 +94,11 @@ elsif ARGV[0] == 'rsync'
   exec(*ARGV)
 
 elsif ARGV[0] == 'byteback-snapshot'
-  ARGV.concat(['--root', "#{byteback_root}"])
+  ARGV.concat(['--root', byteback_root.to_s])
   exec(*ARGV)
 
-elsif ARGV[0] == "restore"
-  puts "** Your byteback package needs to be updated.  Please update and try again."
+elsif ARGV[0] == 'restore'
+  puts '** Your byteback package needs to be updated.  Please update and try again.'
   exit(1)
 
 end
@@ -108,15 +108,15 @@ opts = Trollop.options do
   opt :complete, 'Mark current backup as complete'
   opt :list, 'Show backed up files matching the given pattern'
   opt :all,  'Show all stored versions of a file'
-  opt :snapshot, 'Show backed up files in a certain snapshot.', :default => '*'
+  opt :snapshot, 'Show backed up files in a certain snapshot.', default: '*'
   opt :verbose, 'Print diagnostics'
 end
 
 #
 # Make sure we don't get crazy option combinations.
 #
-n_modes = opts.keys.inject(0) do |s,m|
-    [:ping, :complete, :list].include?(m) ? s += 1 : s
+n_modes = opts.keys.inject(0) do |s, m|
+  [:ping, :complete, :list].include?(m) ? s += 1 : s
 end
 
 error('Please only choose one mode') unless n_modes == 1
@@ -129,11 +129,11 @@ elsif opts[:list]
 
   restore = Byteback::Restore.new(byteback_root)
   restore.snapshot = opts[:snapshot]
-  restore.find(args, :all => opts[:all], :verbose => opts[:verbose])
+  restore.find(args, all: opts[:all], verbose: opts[:verbose])
 
   if restore.results.empty?
-    puts "** Sorry.  There were no files matching:"
-    puts "--> "+args.join("\n--> ")
+    puts '** Sorry.  There were no files matching:'
+    puts '--> ' + args.join("\n--> ")
   else
     puts restore.list
   end

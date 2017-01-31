@@ -23,17 +23,17 @@ end
 
 opts = Trollop.options do
   opt :hostname, 'Set host name for backups',
-      :type => :string
+      type: :string
 
   opt :destination, 'Backup destination (i.e. user@host:/path)',
-      :type => :string
+      type: :string
 end
 
 @destination = opts[:destination]
 @hostname = opts[:hostname]
 
 _dummy, @destination_user, @destination_host, colon, @destination_path =
-                                                     /^(.*)?(?:@)([^:]+)(:)(.*)?$/.match(@destination).to_a
+  /^(.*)?(?:@)([^:]+)(:)(.*)?$/.match(@destination).to_a
 
 @destination_user ||= 'byteback'
 @destination_path ||= ''

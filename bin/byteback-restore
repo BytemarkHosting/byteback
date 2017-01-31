@@ -31,13 +31,13 @@ def ssh(*ssh_args)
          ] +
          ssh_args.map { |a| a ? a : '' }
 
-  puts args.join(" " ) if @verbose
+  puts args.join(' ') if @verbose
   system(*args)
 end
 
 def list_files(pattern, snapshot, all)
   args = ['byteback-receive', '--snapshot', snapshot, '--list']
-  args << "--all" if all
+  args << '--all' if all
   args << @verbose if @verbose
   args += Byteback::Restore.encode_args(pattern)
   ssh(*args)
@@ -60,28 +60,28 @@ def restore_files(paths, snapshot, all)
   #
   #  Add on the I/O-timeout
   #
-  args += ['--timeout', @io_timeout.to_s ] unless ( @io_timeout.nil? )
+  args += ['--timeout', @io_timeout.to_s] unless @io_timeout.nil?
   args += ['--rsh', "ssh -o BatchMode=yes -x -a -i #{@ssh_key} -l #{@destination_user}"]
   args << '--verbose' if @verbose
-  args += ['--rsync-path', "byteback-restore --fake-super --snapshot #{snapshot}" + (all ? " --all" : "")]
+  args += ['--rsync-path', "byteback-restore --fake-super --snapshot #{snapshot}" + (all ? ' --all' : '')]
 
   #
   # To add extra rsync flags, a file can be used.  This can have flags all on one line, or one per line.
   #
-  if File.exists?("/etc/byteback/rsync_flags")
-    args += File.readlines("/etc/byteback/rsync_flags").map(&:chomp)
+  if File.exist?('/etc/byteback/rsync_flags')
+    args += File.readlines('/etc/byteback/rsync_flags').map(&:chomp)
   end
 
   dst = "#{@destination_user}@#{@destination_host}:"
 
   paths.each do |path|
     path = Byteback::Restore.encode_args(path).first
-    args << File.join(dst,path)
-    dst = ":"
+    args << File.join(dst, path)
+    dst = ':'
   end
 
-  args << "."
-  puts args.join(" ") if @verbose
+  args << '.'
+  puts args.join(' ') if @verbose
   system(*args)
 end
 
@@ -98,36 +98,35 @@ if __FILE__ == $PROGRAM_NAME
   opts = Trollop.options do
     banner "#{ME}: Restore a file to this system from a byteback-enabled server\n "
 
-    opt :list, "List or find files on the backup server.  This is the default mode."
+    opt :list, 'List or find files on the backup server.  This is the default mode.'
 
-    opt :restore, "Restore files from the backup server."
+    opt :restore, 'Restore files from the backup server.'
 
-    opt :snapshot, "The specific snapshot to use",
-        :type => :string, :default => "*"
+    opt :snapshot, 'The specific snapshot to use',
+        type: :string, default: '*'
 
     opt :destination, 'Backup destination (i.e. user@host:/path)',
-        :type => :string
+        type: :string
 
     opt :io_timeout, 'Number of seconds to allow I/O to timeout',
-          :type => :integer,
-          :default => 300
+        type: :integer,
+        default: 300
 
     opt :ssh_key, 'SSH key filename',
-        :type => :string,
-        :default => '/etc/byteback/key',
-        :short => 'k'
+        type: :string,
+        default: '/etc/byteback/key',
+        short: 'k'
 
     opt :all, 'List or restore all versrions of each file',
-        :short => 'a'
+        short: 'a'
 
     opt :verbose, 'Show more output'
-
   end
 
   #
   # Make sure we know what we're doing.
   #
-  fatal("Please choose either --list or --restore") if opts[:list] and opts[:restore]
+  fatal('Please choose either --list or --restore') if opts[:list] && opts[:restore]
 
   @verbose = opts[:verbose] ? '--verbose' : nil
   @io_timeout = opts[:io_timeout] if opts[:io_timeout]
@@ -138,9 +137,7 @@ if __FILE__ == $PROGRAM_NAME
   end
 
   # Set the default SSH key
-  if File.exist?('/etc/byteback/key')
-    @ssh_key = '/etc/byteback/key'
-  end
+  @ssh_key = '/etc/byteback/key' if File.exist?('/etc/byteback/key')
 
   #
   # Allow the command-line to override them.
@@ -157,7 +154,9 @@ if __FILE__ == $PROGRAM_NAME
   # Check our destination is well-formed
   #
   if @destination =~ /^(?:(.+)@)?([^@:]+):(.+)?$/
-    @destination_user, @destination_host, @destination_path = [Regexp.last_match(1), Regexp.last_match(2), Regexp.last_match(3)]
+    @destination_user = Regexp.last_match(1)
+    @destination_host = Regexp.last_match(2)
+    @destination_path = Regexp.last_match(3)
   else
     fatal('Destination must be a remote path, e.g. ssh@host.com:/store/backups')
   end
@@ -171,18 +170,16 @@ if __FILE__ == $PROGRAM_NAME
   #  If the user didn't specify a file then we're not restoring anything,
   # and we should abort.
   #
-  if ARGV.empty?
-    fatal('You must specify a file to search/restore')
-  end
+  fatal('You must specify a file to search/restore') if ARGV.empty?
 
   if opts[:restore]
     #
     #  Restore a file
     #
-    restore_files(ARGV.collect{|a| File.expand_path(a)}, opts[:snapshot], opts[:all])
+    restore_files(ARGV.collect { |a| File.expand_path(a) }, opts[:snapshot], opts[:all])
     exit(0)
   end
 
-  list_files(ARGV.collect{|a| File.expand_path(a)}, opts[:snapshot], opts[:all])
+  list_files(ARGV.collect { |a| File.expand_path(a) }, opts[:snapshot], opts[:all])
   exit(0)
 end

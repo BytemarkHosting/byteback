@@ -1,0 +1,9 @@
+AllCops:
+  TargetRubyVersion: 1.9
+  Exclude:
+    - lib/trollop.rb
+    - lib/ffi-xattr.rb
+    - lib/ffi-xattr/**/*
+    - lib/sys/filesystem.rb
+    - misc/**/*
+    - debian/**/*

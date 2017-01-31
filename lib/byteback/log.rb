@@ -2,7 +2,6 @@ require 'logger'
 require 'syslog'
 
 module Byteback
-
   #
   # Translates Ruby's Logger calls to similar calls to Syslog
   # (implemented in Ruby 2.0 as Syslog::Logger).
@@ -18,15 +17,15 @@ module Byteback
       def info(m)
         log_nopc(Syslog::LOG_INFO, m)
       end
-      
+
       def warn(m)
         log_nopc(Syslog::LOG_WARNING, m)
       end
-      
+
       def error(m)
         log_nopc(Syslog::LOG_ERR, m)
       end
-      
+
       #
       # syslog(3) says:
       #
@@ -51,7 +50,6 @@ module Byteback
   #
   module Log
     @@me = File.expand_path($PROGRAM_NAME).split('/').last
-
 
     #
     #  If we're running interactively then we have simple logging.
@@ -80,24 +78,23 @@ module Byteback
       @@logger = SyslogProxy
     end
 
-    
     def debug(*a)
       @@logger.__send__(:debug, *a)
     end
-    
+
     def info(*a)
       @@logger.__send__(:info, *a)
     end
-    
+
     def warn(*a)
       @@logger.__send__(:warn, *a)
     end
-    
+
     def fatal(*a)
       @@logger.__send__(:fatal, *a)
       exit 1
     end
-    
+
     def error(*a)
       @@logger.__send__(:error, *a)
     end

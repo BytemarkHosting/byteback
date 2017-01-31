@@ -15,7 +15,7 @@ module Byteback
         if File.exist? @@lockfile
           # check the lockfile is sane
           exist_pid = File.read(@@lockfile).to_i
-          if exist_pid > 1 && exist_pid < (File.read('/proc/sys/kernel/pid_max').to_i)
+          if exist_pid > 1 && exist_pid < File.read('/proc/sys/kernel/pid_max').to_i
             begin
               Process.getpgid(exist_pid)
               # if no exception, process is running, abort
@@ -40,7 +40,7 @@ module Byteback
           lockfile.puts Process.pid
         end
       rescue => _ex
-        fatal("Failed to open lockfile - are you running as root?")
+        fatal('Failed to open lockfile - are you running as root?')
       end
     end
 
@@ -51,7 +51,7 @@ module Byteback
     end
 
     def log_system(*args)
-      debug('system: ' + args.map { |a| / /.match(a) ? "\"#{a}\"" : a }.join(' '))
+      debug('system: ' + args.map { |a| / / =~ a ? "\"#{a}\"" : a }.join(' '))
       rd, wr = IO.pipe
       pid = fork
       if pid.nil? # child
@@ -71,8 +71,7 @@ module Byteback
       %w(/bin/btrfs /sbin/btrfs).each do |path|
         return path if File.exist?(path)
       end
-      raise Errno::ENOENT, 'btrfs'
+      fail Errno::ENOENT, 'btrfs'
     end
-
   end
 end

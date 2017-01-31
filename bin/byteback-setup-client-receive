@@ -44,7 +44,7 @@ if File.exist?('.ssh/authorized_keys') &&
 else
 
   File.open('.ssh/authorized_keys', 'a+') do |fh|
-    fh.print <<-LINE.gsub(/\n/, '') + "\n"
+    fh.print <<-LINE.delete("\n") + "\n"
 command="byteback-receive",
 from="#{@client_ip}",
 environment="BYTEBACK_HOST=#{@hostname}"

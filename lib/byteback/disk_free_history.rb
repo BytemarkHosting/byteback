@@ -67,8 +67,8 @@ module Byteback
       list.reverse.each do |reading|
         if later_reading
           difference =
-            value_from_reading.call(reading) -
-            value_from_reading.call(later_reading)
+            yield reading -
+            yield later_reading
           total += difference
         end
         readings += 1

@@ -49,7 +49,7 @@ class SnapshotTest < Test::Unit::TestCase
 
         targets = ((0..6).to_a + 
           [7,14,21,28].to_a.collect{|i| i + now.wday} +
-          [2*28 + mod_28]).select{|t| t < day}.first(limit).reverse
+          [2*28 + mod_28]).find{|t| t < day}(limit).reverse
 
         assert_equal(targets - offsets, [], "Failed after day #{day} (#{now.wday}) for a limit of #{limit} backups")
 

@@ -16,8 +16,6 @@ require 'byteback/log'
 include Byteback::Util
 include Byteback::Log
 
-
-
 #
 #  Run an ssh-command.
 #
@@ -40,8 +38,6 @@ def ssh(*ssh_args)
   log_system(*args)
 end
 
-
-
 #
 # Call rsync to copy certain sources, returns exit status (see man rsync)
 #
@@ -60,8 +56,7 @@ def rsync(*sources)
   #
   #  Add on the I/O-timeout
   #
-  args += ['--timeout', @io_timeout.to_s ] unless ( @io_timeout.nil? )
-
+  args += ['--timeout', @io_timeout.to_s] unless @io_timeout.nil?
 
   args += ['--rsh', "ssh -o BatchMode=yes -x -a -i #{@ssh_key} -l #{@destination_user}"]
   args << '--verbose' if @verbose
@@ -96,17 +91,15 @@ def rsync(*sources)
   log_system(*args)
 end
 
-
 #
 #  Run all the executable-scripts in the specified directory.
 #
 def run_parts(dir)
   if File.directory? dir
-      args = ['run-parts', dir ]
-      log_system(*args)
+    args = ['run-parts', dir]
+    log_system(*args)
   end
 end
-
 
 ##
 ##  Entry-point to our code.
@@ -119,41 +112,40 @@ if __FILE__ == $PROGRAM_NAME
     banner "#{ME}: Back up this system to a byteback-enabled server\n "
 
     opt :destination, 'Backup destination (i.e. user@host:/path)',
-        :type => :string
+        type: :string
 
     opt :source, 'Source paths',
-        :type => :strings,
-        :default => ['/']
+        type: :strings,
+        default: ['/']
 
     opt :exclude, 'Paths to exclude',
-        :type => :strings,
-        :short => 'x'
+        type: :strings,
+        short: 'x'
 
     opt :verbose, 'Show debugging messages'
 
     opt :retry_number, 'Number of retries on error',
-        :type => :integer,
-        :default => 3
+        type: :integer,
+        default: 3
 
     opt :io_timeout, 'Number of seconds to allow I/O timeout for',
-        :type => :integer,
-        :default => 10800
+        type: :integer,
+        default: 10_800
 
     opt :retry_delay, 'Number of seconds between retries after an error',
-        :type => :integer,
-        :default => 300
+        type: :integer,
+        default: 300
 
     opt :ssh_key, 'SSH key filename',
-        :type => :string,
-        :default => '/etc/byteback/key',
-        :short => 'k'
+        type: :string,
+        default: '/etc/byteback/key',
+        short: 'k'
 
     opt :help, 'Show this message',
-        :short => 'h'
+        short: 'h'
 
     banner "\nAdditional excludes can be specified using /etc/byteback/rsync_filter, which is an rsync filter file.  See the rsync man page for information on how this works.\n"
   end
-
 
   #
   #  Abort if we're already running.
@@ -169,28 +161,26 @@ if __FILE__ == $PROGRAM_NAME
   @retry_delay = opts[:retry_delay]
   @io_timeout = opts[:io_timeout] if opts[:io_timeout]
 
-
   # Read the default destination
   if File.exist?('/etc/byteback/destination')
     @destination = File.read('/etc/byteback/destination').chomp
   end
 
   # Set the default SSH key
-  if File.exist?('/etc/byteback/key')
-    @ssh_key = '/etc/byteback/key'
-  end
+  @ssh_key = '/etc/byteback/key' if File.exist?('/etc/byteback/key')
 
   # If we have a local timeout-file then use that
   if File.exist?('/etc/byteback/io_timeout')
     @io_timeout = File.foreach('/etc/byteback/io_timeout').first.to_i
   end
 
-
   #
   # Check our destination
   #
   if @destination =~ /^(?:(.+)@)?([^@:]+):(.+)?$/
-    @destination_user, @destination_host, @destination_path = [Regexp.last_match(1), Regexp.last_match(2), Regexp.last_match(3)]
+    @destination_user = Regexp.last_match(1)
+    @destination_host = Regexp.last_match(2)
+    @destination_path = Regexp.last_match(3)
   else
     fatal('Destination must be a remote path, e.g. ssh@host.com:/store/backups')
   end
@@ -215,28 +205,28 @@ if __FILE__ == $PROGRAM_NAME
   if @excludes.nil?
 
     PROBABLY_LOCAL = %w(
-    btrfs
-    ext2
-    ext3
-    ext4
-    reiserfs
-    xfs
-    nilfs
-    jfs
-    reiser4
-    zfs
-    rootfs
-  )
+      btrfs
+      ext2
+      ext3
+      ext4
+      reiserfs
+      xfs
+      nilfs
+      jfs
+      reiser4
+      zfs
+      rootfs
+    ).freeze
 
     COMMON_JUNK = %w(
-    /swap.file
-    /tmp/
-    /var/backups/localhost/
-    /var/cache/apt/archives/
-    /var/lib/php5/
-    /var/tmp/
-    /var/lib/mysql/
-  )
+      /swap.file
+      /tmp/
+      /var/backups/localhost/
+      /var/cache/apt/archives/
+      /var/lib/php5/
+      /var/tmp/
+      /var/lib/mysql/
+    ).freeze
 
     MOUNT_HEADINGS = %w( spec file vfstype mntops freq passno ).map(&:to_sym)
 
@@ -261,27 +251,24 @@ if __FILE__ == $PROGRAM_NAME
   #
   fatal("Could not read ssh key #{@ssh_key}") unless File.readable?(@ssh_key)
 
-
   #
   # Run our pre-backup actions, if any
   #
-  run_parts( "/etc/byteback/pre-backup.d/" )
+  run_parts('/etc/byteback/pre-backup.d/')
 
-  
   #
   # Test ssh connection is good before we start
-  #  
+  #
   fatal("Could not connect to #{@destination}") unless
     ssh('byteback-receive', '--ping', @verbose) == 0
-
 
   #
   # We treat exit statuses 0 and 24 as success; 0 is "Success"; 24 is "Partial
   # transfer due to vanished source files", which we treat as success otherwise
   # on some hosts the backup process never finishes.
   #
-  RSYNC_EXIT_STATUSES_TO_ACCEPT   = [0, 24]
-  RSYNC_EXIT_STATUSES_TO_RETRY_ON = [10, 11, 20, 21, 22, 23, 30]
+  RSYNC_EXIT_STATUSES_TO_ACCEPT   = [0, 24].freeze
+  RSYNC_EXIT_STATUSES_TO_RETRY_ON = [10, 11, 20, 21, 22, 23, 30].freeze
 
   # Run the file copy, retrying if necessary
   #
@@ -314,11 +301,10 @@ if __FILE__ == $PROGRAM_NAME
   fatal('Backup could not be marked complete') unless
     ssh('byteback-receive', '--complete', @verbose) == 0
 
-
   #
   # Run our completion-actions, if any.
   #
-  run_parts( "/etc/byteback/post-backup.d/" )
+  run_parts('/etc/byteback/post-backup.d/')
 
   info('Finished')
 end

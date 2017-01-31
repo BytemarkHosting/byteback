@@ -2,14 +2,12 @@
 require 'byteback/restore_file'
 
 module Byteback
-
   class Restore
-
     def self.find(byteback_root, snapshot, paths)
       x = Byteback::Restore.new(byteback_root)
       x.snapshot = snapshot
       x.find(paths)
-      return x
+      x
     end
 
     #
@@ -19,7 +17,7 @@ module Byteback
     # Returns an array of encoded strings.
     #
     def self.encode_args(args)
-      [args].flatten.collect{|s| [s].pack("M").gsub(" ","=20").gsub("=\n","")}
+      [args].flatten.collect { |s| [s].pack('M').gsub(' ', '=20').gsub("=\n", '') }
     end
 
     #
@@ -29,17 +27,17 @@ module Byteback
     # Returns an array of decoded strings.
     #
     def self.decode_args(args)
-      [args].flatten.collect{|s| (s + "=\n").unpack("M")}.flatten
+      [args].flatten.collect { |s| (s + "=\n").unpack('M') }.flatten
     end
 
     def initialize(byteback_root)
-      # 
+      #
       # We use expand_path here to make sure we have a full path, with no
       # trailing slash.
       #
       @byteback_root = File.expand_path(byteback_root)
-      @now     = Time.now
-      @snapshot = "*"
+      @now = Time.now
+      @snapshot = '*'
       @results = []
     end
 
@@ -51,16 +49,14 @@ module Byteback
       end
     end
 
-    def results
-      @results
-    end
+    attr_reader :results
 
     def find(paths, opts = {})
       results = []
       #
       # Make sure we've an array, and that we get rid of any ".." nonsense.
       #
-      paths = [paths].flatten.collect{|p| File.expand_path(p, "/")}
+      paths = [paths].flatten.collect { |p| File.expand_path(p, '/') }
       seen  = []
 
       @results = paths.collect do |path|
@@ -72,19 +68,19 @@ module Byteback
       #
       # If we want an unpruned list, return it now.
       #
-      if opts == true or (opts.is_a?(Hash) and opts[:verbose])
-        @results = @results.sort{|a,b| [a.path, a.snapshot_time] <=> [b.path, b.snapshot_time]}
+      if opts == true || (opts.is_a?(Hash) && opts[:verbose])
+        @results = @results.sort { |a, b| [a.path, a.snapshot_time] <=> [b.path, b.snapshot_time] }
         return @results
       end
 
-      @results = @results.sort{|a,b| [a.path, b.snapshot_time] <=> [b.path, a.snapshot_time]}
+      @results = @results.sort { |a, b| [a.path, b.snapshot_time] <=> [b.path, a.snapshot_time] }
       pruned_results = []
 
       @results.each do |r|
-        if (opts.is_a?(Hash) and opts[:all])
+        if opts.is_a?(Hash) && opts[:all]
           pruned_results << r unless pruned_results.include?(r)
         else
-          pruned_results << r unless pruned_results.any?{|pr| pr.path == r.path}
+          pruned_results << r unless pruned_results.any? { |pr| pr.path == r.path }
         end
       end
 
@@ -95,14 +91,12 @@ module Byteback
       heading = %w(snapshot modestring size uid gid mtime path)
       listings = [heading]
       @results.sort.each do |r|
-        listing = heading.collect{|m| r.__send__(m.to_sym).to_s }
-        if r.symlink?
-          listing[-1] << " -> "+r.readlink
-        end
+        listing = heading.collect { |m| r.__send__(m.to_sym).to_s }
+        listing[-1] << ' -> ' + r.readlink if r.symlink?
         listings << listing
       end
 
-      field_sizes = [0]*heading.length
+      field_sizes = [0] * heading.length
 
       listings.each do |fields|
         fields.each_with_index do |field, i|
@@ -110,9 +104,9 @@ module Byteback
         end
       end
 
-      fmt = field_sizes.collect{|i| "%-#{i}.#{i}s"}.join(" ")
+      fmt = field_sizes.collect { |i| "%-#{i}.#{i}s" }.join(' ')
 
-      bar = "-"*field_sizes.inject(field_sizes.length){|m,s| m+=s}
+      bar = '-' * field_sizes.inject(field_sizes.length) { |m, s| m += s }
 
       output = []
       listings.each do |fields|
@@ -123,8 +117,7 @@ module Byteback
         end
       end
 
-      return output.join("\n")
+      output.join("\n")
     end
-
   end
 end

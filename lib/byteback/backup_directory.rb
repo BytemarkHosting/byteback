@@ -3,7 +3,6 @@ require 'byteback/utils'
 module Byteback
   # Represents a particular timestamped backup directory
   class Snapshot
-
     include Byteback::Util
 
     class << self
@@ -12,10 +11,10 @@ module Byteback
       # Order backups by their closeness to defined backup times, which are
       # listed in a set order (i.e. today's backup is more important than yesterday's).
       #
-      BACKUP_IMPORTANCE = [1, 2, 7, 14, 21, 28, 56, 112]
+      BACKUP_IMPORTANCE = [1, 2, 7, 14, 21, 28, 56, 112].freeze
 
       def sort_by_importance(snapshots_unsorted, now = Time.now)
-        return snapshots_unsorted if  snapshots_unsorted.size < 1
+        return snapshots_unsorted if snapshots_unsorted.size < 1
 
         #
         # Keep the last 7 days backups
@@ -78,11 +77,10 @@ module Byteback
             # host was more recent, i.e. we've reached the oldest, and are
             # bouncing back again.
             #
-            if last_nearest[host].nil? || last_nearest[host].time > nearest.time
-              last_nearest[host] = nearest
-              snapshots_by_host[host]  -= [nearest]
-              snapshots_sorted         << nearest
-            end
+            next unless last_nearest[host].nil? || last_nearest[host].time > nearest.time
+            last_nearest[host] = nearest
+            snapshots_by_host[host] -= [nearest]
+            snapshots_sorted << nearest
           end
         end
 
