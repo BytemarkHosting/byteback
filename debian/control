@@ -3,7 +3,7 @@ Section: ruby
 Priority: optional
 Maintainer: Patrick J Cherry <patrick@bytemark.co.uk>
 Uploaders: Steve Kemp <steve@bytemark.co.uk>
-Build-Depends: debhelper (>= 7.0.50~), txt2man
+Build-Depends: debhelper (>= 7.0.50~), txt2man, ruby | ruby-interpreter, ruby-ffi
 Standards-Version: 3.9.6
 # Vcs-Git:
 Vcs-Browser: https://github.com/BytemarkHosting/byteback.git
@@ -12,6 +12,7 @@ Homepage: https://github.com/BytemarkHosting/byteback
 Package: byteback
 Architecture: all
 Depends: ${shlibs:Depends}, ${misc:Depends}, ruby | ruby-interpreter, rsync, openssh-client, ruby-ffi | libffi-ruby
+Recommends: btrfs-progs
 Description: Maintenance-free client & server backup scripts for Linux
  byteback encapsulates Bytemark's "best practice" for maintenance-free backups
  with easy client and server setup.
