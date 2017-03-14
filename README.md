@@ -84,9 +84,9 @@ This is now documented in byteback-prune(1).
 
 Acknowledgements
 ----------------
-For maximum portability, I've included three libraries.  Thanks very much to
+For maximum portability, we have included three libraries.  Thanks very much to
 their authors:
 
-* sys-filesystem by Daniel J. Berger: https://github.com/djberg96/sys-filesystem
-* trollop by William Morgan: https://github.com/wjessop/trollop
-* ffi-xattr by Jari Bakken: https://github.com/jarib/ffi-xattr
+* [sys-filesystem](https://github.com/djberg96/sys-filesystem) by Daniel J. Berger.
+* [trollop](https://github.com/wjessop/trollop) by William Morgan.
+* [ffi-xattr](https://github.com/jarib/ffi-xattr by Jari Bakken.
