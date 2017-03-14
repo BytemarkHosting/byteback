@@ -11,6 +11,27 @@ We use the standard OpenSSH on the server for encrypted transport & access contr
 Backups should require as little configuration as possible to be safe - just the server address should be enough.
 
 
+Packages
+--------
+
+We maintain packages for several releases of Debian GNU/Linux and Ubuntu, which can be found on repository host:
+
+*  http://repo.bytemark.co.uk/byteback/
+
+You can install these by creating a file `/etc/apt/sources.list.d/byteback.list` with contents such as the following (which is for the `jessie` release of Debian):
+
+    deb http://repo.bytemark.co.uk/byteback/jessie ./
+
+Once you've created the source-file you should be able to install the package via:
+
+    apt-get update
+    apt-get install byteback
+
+If you have never installed a package from the Bytemark repository you can resolve any errors about an unknown GPG via:
+
+    wget -O - https://secure.bytemark.co.uk/key/repositories-2014.key  | sudo apt-key add  -
+
+
 Setting up: server
 ------------------
 Install the '`byteback`' package on the server, along with its dependencies.
@@ -42,6 +63,9 @@ Finally, before setting up the client you should add the following to `/etc/ssh/
 
 Setting up: client
 ------------------
+
+Install the '`byteback`' package on the client host(s), along with the dependencies.
+
 Clients are machines that need to be backed up.  Assuming you can log into the remote '`byteback`' user with a password or administrative key, you only need to type one command on the client to set things going:
 
 	sudo byteback-setup-client --destination byteback@mybackuphost.net:
