@@ -1,8 +1,7 @@
 byteback - maintenance-free client & server backup scripts for Linux
 ====================================================================
 
-`byteback` encapsulates Bytemark's "best practice" for maintenance-free backups
-with easy client and server setup.
+`byteback` encapsulates Bytemark's "best practice" for maintenance-free backups with easy client and server setup.
 
 "Maintenance-free" means that we'd rather make full use of a fixed amount of disc space.  Management of disc space must be completely automatic, so the process never grinds to a halt for reasons that could be automatically resolved.  Failed backups can be restarted in case of network problems.
 
@@ -34,6 +33,7 @@ If you have never installed a package from the Bytemark repository you can resol
 
 Setting up: server
 ------------------
+
 Install the '`byteback`' package on the server, along with its dependencies.
 
 You then need to perform the following local setup on the server, which can securely handle backups for multiple clients.  You need a dedicated user (which is usually called 'byteback') with a home directory on a btrfs filesystem.  You will need to mount the filesystem with the '`user_subvol_rm_allowed`' flag to enable pruning to work (or run that part as root).
@@ -78,25 +78,21 @@ If this goes OK, you are ready to start backing up.  I'd advise taking the first
 Configuring byteback-backup
 ---------------------------
 
-This is now documented in the manpage for byteback-backup(1).
-
+This is now documented in the manpage for [byteback-backup(1)](https://raw.githubusercontent.com/BytemarkHosting/byteback/master/man/byteback-backup.txt).
 
 Viewing and restoring backups
 -----------------------------
 
-This is now documented in the manpage for byteback-restore(1).
-
+This is now documented in the manpage for [byteback-restore(1)](https://raw.githubusercontent.com/BytemarkHosting/byteback/master/man/byteback-restore.txt).
 
 The trust model
 ---------------
+
 Backups are intended to keep your data safe, and byteback makes the assumption that the client may become hostile to the backup server.  At Bytemark this allows us to guard against rogue employees of our clients destroying the backup, while ensuring that our clients can still access all their old backups.  There are several measures to guard against this, though they are all ineffective over a long enough period of time:
 
 * the server uses SSH's command feature to ensure that clients can only run rsync to the appropriate directory;
-
 * the server's snapshots are read-only, so the client can't just rsync an empty directory over an old backup;
-
 * the server will refuse to take snapshots "too often" to stop the client from filling the disc with useless data;
-
 * the server will refuse to prune away space for a new backup that is suddenly larger than previous ones.
 
 
@@ -108,9 +104,10 @@ This is now documented in byteback-prune(1).
 
 Acknowledgements
 ----------------
+
 For maximum portability, we have included three libraries.  Thanks very much to
 their authors:
 
 * [sys-filesystem](https://github.com/djberg96/sys-filesystem) by Daniel J. Berger.
 * [trollop](https://github.com/wjessop/trollop) by William Morgan.
-* [ffi-xattr](https://github.com/jarib/ffi-xattr by Jari Bakken.
+* [ffi-xattr](https://github.com/jarib/ffi-xattr) by Jari Bakken.
