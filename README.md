@@ -16,11 +16,11 @@ Packages
 
 We maintain packages for several releases of Debian GNU/Linux and Ubuntu, which can be found on repository host:
 
-*  http://repo.bytemark.co.uk/byteback/
+    http://repo.bytemark.co.uk/open-source/byteback/
 
 You can install these by creating a file `/etc/apt/sources.list.d/byteback.list` with contents such as the following (which is for the `jessie` release of Debian):
 
-    deb http://repo.bytemark.co.uk/byteback/jessie ./
+    deb http://repo.bytemark.co.uk/open-source/byteback/master/latest/jessie ./
 
 Once you've created the source-file you should be able to install the package via:
 
@@ -29,7 +29,7 @@ Once you've created the source-file you should be able to install the package vi
 
 If you have never installed a package from the Bytemark repository you can resolve any errors about an unknown GPG via:
 
-    wget -O - https://secure.bytemark.co.uk/key/repositories-2014.key  | sudo apt-key add  -
+    wget -O - https://secure.bytemark.co.uk/key/repositories-2014.key | sudo apt-key add  -
 
 
 Setting up: server
@@ -41,20 +41,20 @@ You then need to perform the following local setup on the server, which can secu
 The following commands are appropriate for a Debian system, you might need to alter them for other Linux distributions, or if you are not using LVM for your discs:
 
     #
-	# Create a dedicated UNIX user which will store everyone's backups, and
-	# allow logins
-	#
-	adduser --system byteback --home /byteback --shell /bin/bash
+    # Create a dedicated UNIX user which will store everyone's backups, and
+    # allow logins
+    #
+    adduser --system byteback --home /byteback --shell /bin/bash
 
     #
-	# Create a dedicated btrfs filesystem for the user, and add that as its home
-	#
-	lvcreate my_volume_group --name byteback --size 1000GB
-	mkfs.btrfs /dev/my_volume_group/byteback
-	echo '/dev/my_volume_group/byteback /byteback btrfs noatime,space_cache,compress=lzo,clear_cache,autodefrag,user_subvol_rm_allowed 0 0' >>/etc/fstab
-	mount /byteback
-	chown byteback /byteback
-	chmod u+w /byteback
+    # Create a dedicated btrfs filesystem for the user, and add that as its home
+    #
+    lvcreate my_volume_group --name byteback --size 1000GB
+    mkfs.btrfs /dev/my_volume_group/byteback
+    echo '/dev/my_volume_group/byteback /byteback btrfs noatime,space_cache,compress=lzo,clear_cache,autodefrag,user_subvol_rm_allowed 0 0' >>/etc/fstab
+    mount /byteback
+    chown byteback /byteback
+    chmod u+w /byteback
 
 Finally, before setting up the client you should add the following to `/etc/ssh/sshd_config`, and restart the ssh-service:
 
@@ -68,11 +68,11 @@ Install the '`byteback`' package on the client host(s), along with the dependenc
 
 Clients are machines that need to be backed up.  Assuming you can log into the remote '`byteback`' user with a password or administrative key, you only need to type one command on the client to set things going:
 
-	sudo byteback-setup-client --destination byteback@mybackuphost.net:
+    sudo byteback-setup-client --destination byteback@mybackuphost.net:
 
 If this goes OK, you are ready to start backing up.  I'd advise taking the first backup manually to make sure it goes as you expect.  Type this on the client to start and watch the backup.
 
-	sudo byteback-backup --verbose
+    sudo byteback-backup --verbose
 
 
 Configuring byteback-backup
