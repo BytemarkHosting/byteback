@@ -10,16 +10,45 @@ test: &test
     - apt-get install attr ruby-ffi
     - make test
 
-package: &package
+.package: &package
   image: $CI_REGISTRY/docker-images/layers:$DISTRO-deb
-  variables:
-    DISTRO: jessie
   stage: package
   script:
     - package
   artifacts:
     paths:
       - pkg/
+
+package:wheezy:
+  <<: *package
+  variables:
+    DISTRO: wheezy
+
+package:jessie:
+  <<: *package
+  variables:
+    DISTRO: jessie
+
+package:stretch:
+  <<: *package
+  variables:
+    DISTRO: stretch
+
+package:precise:
+  <<: *package
+  variables:
+    DISTRO: precise
+
+package:trusty:
+  <<: *package
+  variables:
+    DISTRO: trusty
+
+package:xenial:
+  <<: *package
+  variables:
+    DISTRO: xenial
+
 
 publish:
   stage: publish
@@ -29,5 +58,10 @@ publish:
     - shell
   script:
     - publish
-
-
+  dependencies:
+    - package:wheezy
+    - package:jessie
+    - package:stretch
+    - package:precise
+    - package:trusty
+    - package:xenial
