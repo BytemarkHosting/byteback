@@ -77,7 +77,7 @@ end
 
 # Check whether we should still be pruning
 #
-@free = @df_history.list.last.percent_free
+@free = BackupDirectory.free
 PRUNING_FLAG = "#{ENV['HOME']}/.byteback.pruning"
 
 if @do_prune_force
@@ -138,4 +138,4 @@ if snapshots.empty?
 end
 
 info("Deleting #{snapshots.last.path}")
-log_system("#{btrfs_bin} subvolume delete --commit-after #{snapshots.last.path}")
+log_system("#{btrfs_bin} subvolume delete --commit-after #{snapshots.last.path} ; #{btrfs_bin} subvolume sync -n 10 #{ENV['HOME']}/ ")
