@@ -89,10 +89,10 @@ elsif @free >= @maxpercent && File.exist?(PRUNING_FLAG)
   info("Stopping prune, reached #{@free}% free")
   File.unlink(PRUNING_FLAG)
 elsif File.exist?(PRUNING_FLAG)
-  info("Continuing prune #{@free}% -> #{@maxpercent}, gradient = #{gradient_30m}")
+  info("Continuing prune #{@free}% -> #{@maxpercent}")
 end
 
-debug("Disc free #{@free}%, 30m gradient = #{gradient_30m}")
+debug("Disc free #{@free}%")
 
 def snapshots_in_order
   list = BackupDirectory.all_snapshots
