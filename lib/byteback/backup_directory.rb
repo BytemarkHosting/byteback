@@ -120,7 +120,7 @@ module Byteback
     end
 
     def delete!
-      system_no_error("#{btrfs_bin} subvolume delete #{path}")
+      system_no_error("#{btrfs_bin} subvolume delete --commit-after #{path}")
     end
 
     # Returns the size of the given snapshot (runs du, may be slow)

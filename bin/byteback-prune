@@ -147,4 +147,4 @@ if snapshots.empty?
 end
 
 info("Deleting #{snapshots.last.path}")
-log_system("#{btrfs_bin} subvolume delete #{snapshots.last.path}")
+log_system("#{btrfs_bin} subvolume delete --commit-after #{snapshots.last.path}")
