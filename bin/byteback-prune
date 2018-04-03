@@ -75,8 +75,6 @@ rescue => anything_else
   raise
 end
 
-gradient_30m = @df_history.gradient(1800)
-
 # Check whether we should still be pruning
 #
 @free = @df_history.list.last.percent_free
@@ -116,14 +114,7 @@ if @do_list
   end
 end
 
-# Don't do anything if we've not got two hours of readings
-#
 unless @do_prune_force
-  if @df_history.list.last.time - @df_history.list.first.time < 1800
-    warn('Not enough disc space history to make a decision')
-    exit 0
-  end
-
   #
   # Do not prune unless at least one snapshot is a week old
   #
@@ -139,7 +130,7 @@ exit 0 unless
   (@do_prune && File.exist?(PRUNING_FLAG)) ||
   @do_prune_force
 
-exit 0 unless @do_prune_force || gradient_30m == 0
+exit 0 unless @do_prune_force 
 
 if snapshots.empty?
   error('No snapshots to delete, is there enough disc space?')
